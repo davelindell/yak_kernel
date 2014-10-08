@@ -9,6 +9,7 @@ tcb_t *YKRdyList;        /* a list of TCBs of all ready tasks in order of decrea
 tcb_t *YKBlockList;      /* tasks delayed or suspended */
 tcb_t *YKAvailTCBList;       /* a list of available TCBs */
 tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (extra one is for the idle task) */
+tcb_t *YKCurrTask;
 int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
 
 
@@ -16,8 +17,9 @@ void YKIdleTask(void) {
     while(1){}
 }
 
+
 void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
-    tcb_t *cur_tcb = &YKAvailTCBList;
+    tcb_t *cur_tcb = YKAvailTCBList;
     YKAvailTCBList++;
     cur_tcb->ax = 0;
     cur_tcb->bx = 0;
@@ -36,24 +38,69 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     cur_tcb->priority = priority;
     cur_tcb->state = READY;
     cur_tcb->delay = 0;
+    YKAddReadyTask(cur_tcb);
 
+    if (YKRunFlag) {
+        YKScheduler();
+    }
 }
 
-
 void YKInitialize(void) {
+    void (*idle_task_p)(void);
+    void *idle_task_stack_p; 
+    int lowest_priority = 100;
     YKCtxSwCount = 0;
     YKTickNum = 0;
     YKIdleCount = 0;
     YKISRDepth = 0;
     YKRunFlag = 0;
+    YKRdyList = NULL;    
+
+    idle_task_p = YKIdleTask;
+    idle_task_stack_p = YKIdleTaskStack;
+    lowest_priority = 100;
 
     YKAvailTCBList = YKTCBArray;
-
-    void (*idle_task_p)(void) = &YKIdleTask;
-    void *idle_task_stack_p = YKIdleTaskStack;
-    int lowest_priority = 100;
-    YKNewTask(idle_task_p, idle_task_stack_p, 100);
+    YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority);
 }
+
+void YKRun(void) {
+    YKRunFlag = 1;
+    YKCurrTask = YKRdyList;
+    YKScheduler();
+}
+
+void YKScheduler(void) {
+    if (YKCurrTask != YKRdyList) { // going to change contexts
+        YKDispatcher();
+    }
+}
+
+void YKDispatcher(void) {
+    // save context of YKCurrTask
+    
+    // YKCurTask = YKRdyList
+
+    // Restore context of YKRdyList
+}
+
+void YKAddReadyTask(tcb_t *cur_tcb) {    
+    if(YKRdyList == NULL) {
+        YKRdyList = cur_tcb;
+    }
+    else {
+        tcb_t *iter = YKRdyList;
+        while (cur_tcb->priority > iter->priority) {
+            iter = iter->next;
+        }
+        cur_tcb->next = iter;
+        cur_tcb->prev = iter->prev;
+        iter->prev->next = cur_tcb;        
+        iter->prev = cur_tcb;
+    }
+    return;
+}
+
 
 
 

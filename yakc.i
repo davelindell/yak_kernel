@@ -10,6 +10,7 @@
 
 
 
+
 typedef enum {READY, DELAYED} tcb_state_t;
 
 typedef struct tcb_t {
@@ -17,18 +18,20 @@ typedef struct tcb_t {
     int bx;
     int cx;
     int dx;
-    int ip;
-    int sp;
-    int bp;
+    void *ip;
+    void *sp;
+    void *bp;
     int si;
     int di;
     int cs;
     int ss;
     int ds;
     int es;
+    int flags;
     int priority;
     tcb_state_t state;
     int delay;
+    struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
 
@@ -42,7 +45,9 @@ extern tcb_t *YKRdyList;
 extern tcb_t *YKBlockList;
 extern tcb_t *YKAvailTCBList;
 extern tcb_t YKTCBArray[3 +1];
+extern tcb_t *YKCurrTask;
 extern int YKIdleTaskStack[256];
+
 
 void YKInitialize(void);
 void YKNewTask(void (*task)(void), void *task_stack, unsigned char priority);
@@ -70,6 +75,7 @@ tcb_t *YKRdyList;
 tcb_t *YKBlockList;
 tcb_t *YKAvailTCBList;
 tcb_t YKTCBArray[3 +1];
+tcb_t *YKCurrTask;
 int YKIdleTaskStack[256];
 
 
@@ -77,38 +83,83 @@ void YKIdleTask(void) {
     while(1){}
 }
 
+
 void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
+    tcb_t *cur_tcb = YKAvailTCBList;
+    YKAvailTCBList++;
+    cur_tcb->ax = 0;
+    cur_tcb->bx = 0;
+    cur_tcb->cx = 0;
+    cur_tcb->dx = 0;
+    cur_tcb->ip = task;
+    cur_tcb->sp = taskStack;
+    cur_tcb->bp = taskStack;
+    cur_tcb->si = 0;
+    cur_tcb->di = 0;
+    cur_tcb->cs = 0;
+    cur_tcb->ss = 0;
+    cur_tcb->ds = 0;
+    cur_tcb->es = 0;
+    cur_tcb->flags = 512;
+    cur_tcb->priority = priority;
+    cur_tcb->state = READY;
+    cur_tcb->delay = 0;
+    YKAddReadyTask(cur_tcb);
 
-
+    if (YKRunFlag) {
+        YKScheduler();
+    }
 }
 
-
 void YKInitialize(void) {
+    void (*idle_task_p)(void);
+    void *idle_task_stack_p;
+    int lowest_priority = 100;
     YKCtxSwCount = 0;
     YKTickNum = 0;
     YKIdleCount = 0;
     YKISRDepth = 0;
     YKRunFlag = 0;
+    YKRdyList = 0;
 
-    tcb_t *idle_task = &YKTCBArray[0];
-    idle_task->ax = 0;
-    idle_task->bx = 0;
-    idle_task->cx = 0;
-    idle_task->dx = 0;
-    idle_task->ip = &YKIdleTask;
-    idle_task->sp = &YKIdleTaskStack[0];
-    idle_task->bp = &YKIdleTaskStack[0];
-    idle_task->si = 0;
-    idle_task->di = 0;
-    idle_task->cs = 0;
-    idle_task->ss = 0;
-    idle_task->ds = 0;
-    idle_task->es = 0;
-    idle_task->priority = 100;
-    idle_task->state = READY;
-    idle_task->delay = 0;
+    idle_task_p = YKIdleTask;
+    idle_task_stack_p = YKIdleTaskStack;
+    lowest_priority = 100;
 
+    YKAvailTCBList = YKTCBArray;
+    YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority);
 }
+
+void YKRun(void) {
+    YKRunFlag = 1;
+    YKCurrTask = YKRdyList;
+    YKScheduler();
+}
+
+void YKScheduler(void) {
+    if (YKCurrTask != YKRdyList) {
+        YKDispatcher();
+    }
+}
+
+
+void YKAddReadyTask(tcb_t *cur_tcb) {
+    if(YKRdyList == 0) {
+        YKRdyList = cur_tcb;
+    }
+    else {
+        tcb_t *iter = YKRdyList;
+        while (cur_tcb->priority > iter->priority) {
+            iter = iter->next;
+        }
+        cur_tcb->next = iter;
+        cur_tcb->prev = iter->prev;
+        iter->prev->next = cur_tcb;
+        iter->prev = cur_tcb;
+    }
+    return;
+}
+
 
 
 

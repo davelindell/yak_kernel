@@ -2,6 +2,7 @@
 #define YAKK_H
 #include "yaku.h"
 #define STACK_SIZE 256
+#define NULL 0
 #endif
 
 typedef enum {READY, DELAYED} tcb_state_t;
@@ -11,18 +12,20 @@ typedef struct tcb_t {
     int bx;
     int cx;
     int dx;
-    int ip;
-    int sp;
-    int bp;
+    void *ip;
+    void *sp;
+    void *bp;
     int si;
     int di;
     int cs;
     int ss;
     int ds;
     int es;
+    int flags;
     int priority;
     tcb_state_t state; //ready, blocked (reason blocked)
     int delay;
+    struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
 
@@ -36,7 +39,9 @@ extern tcb_t *YKRdyList;        /* a list of TCBs of all ready tasks in order of
 extern tcb_t *YKBlockList;      /* tasks delayed or suspended */
 extern tcb_t *YKAvailTCBList;       /* a list of available TCBs */
 extern tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (extra one is for the idle task) */
+extern tcb_t *YKCurrTask;                 /* Currently running task */
 extern int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
+
 
 void YKInitialize(void);
 void YKNewTask(void (*task)(void), void *task_stack, unsigned char priority);
