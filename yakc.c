@@ -1,7 +1,7 @@
 #include "yakk.h"
 int YKCtxSwCount;
-int YKTickNum;
-int YKIdleCount;
+unsigned YKTickNum;
+unsigned YKIdleCount;
 int YKISRDepth;
 int YKRunFlag;
 
@@ -12,11 +12,34 @@ tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (extra one
 tcb_t *YKCurrTask;
 int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
 
-
 void YKIdleTask(void) {
-    while(1){}
+    while(1){
+        ++YKIdleCount;
+    }
 }
 
+void YKInitialize(void) {
+    void (*idle_task_p)(void);
+    void *idle_task_stack_p; 
+    int lowest_priority = 100;
+    YKCtxSwCount = 0;
+    YKTickNum = 0;
+    YKIdleCount = 0;
+    YKISRDepth = 0;
+    YKRunFlag = 0;
+    YKRdyList = NULL;    
+    YKCurrTask = NULL;
+    idle_task_p = YKIdleTask;
+    idle_task_stack_p = YKIdleTaskStack;
+    lowest_priority = 100;
+
+    YKAvailTCBList = YKTCBArray;
+    YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority);
+}
+
+//void YKEnterMutex(void)
+
+//void YKExitMutex(void)
 
 void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     tcb_t *cur_tcb = YKAvailTCBList;
@@ -38,6 +61,8 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     cur_tcb->priority = priority;
     cur_tcb->state = READY;
     cur_tcb->delay = 0;
+    cur_tcb->prev = 0;
+    cur_tcb->next = 0;
     YKAddReadyTask(cur_tcb);
 
     if (YKRunFlag) {
@@ -45,28 +70,8 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     }
 }
 
-void YKInitialize(void) {
-    void (*idle_task_p)(void);
-    void *idle_task_stack_p; 
-    int lowest_priority = 100;
-    YKCtxSwCount = 0;
-    YKTickNum = 0;
-    YKIdleCount = 0;
-    YKISRDepth = 0;
-    YKRunFlag = 0;
-    YKRdyList = NULL;    
-
-    idle_task_p = YKIdleTask;
-    idle_task_stack_p = YKIdleTaskStack;
-    lowest_priority = 100;
-
-    YKAvailTCBList = YKTCBArray;
-    YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority);
-}
-
 void YKRun(void) {
     YKRunFlag = 1;
-    YKCurrTask = YKRdyList;
     YKScheduler();
 }
 
@@ -83,22 +88,24 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
     }
     else {
         tcb_t *iter = YKRdyList;
+        int moved_to_top = 1;
         while (cur_tcb->priority > iter->priority) {
             iter = iter->next;
+            moved_to_top = 0;
         }
         cur_tcb->next = iter;
-        cur_tcb->prev = iter->prev;
-        iter->prev->next = cur_tcb;        
+        if (iter->prev) 
+            iter->prev->next = cur_tcb;  
+
+        cur_tcb->prev = iter->prev;             
         iter->prev = cur_tcb;
+
+        if (moved_to_top)
+            YKRdyList = cur_tcb;
+        
     }
     return;
 }
 
 
-
-
-int main() {
-    YKIdleTask();
-    return 1;
-}
 

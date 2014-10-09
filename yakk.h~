@@ -8,20 +8,20 @@
 typedef enum {READY, DELAYED} tcb_state_t;
 
 typedef struct tcb_t {
-    int ax;
-    int bx;
-    int cx;
-    int dx;
-    void *ip;
-    void *sp;
-    void *bp;
-    int si;
-    int di;
-    int cs;
-    int ss;
-    int ds;
-    int es;
-    int flags;
+    int ax;     //+0
+    int bx;     //+2
+    int cx;     //+4
+    int dx;     //+6
+    void *ip;   //+8
+    void *sp;   //+10
+    void *bp;   //+12
+    int si;     //+14
+    int di;     //+16
+    int cs;     //+18
+    int ss;     //+20
+    int ds;     //+22
+    int es;     //+24
+    int flags;  //+26
     int priority;
     tcb_state_t state; //ready, blocked (reason blocked)
     int delay;
@@ -30,7 +30,7 @@ typedef struct tcb_t {
 } tcb_t;
 
 extern int YKCtxSwCount;
-extern int YKIdleCount;
+extern unsigned YKIdleCount;
 extern int YKTickNum;
 extern int YKISRDepth;
 extern int YKRunFlag;

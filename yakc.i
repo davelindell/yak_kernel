@@ -36,8 +36,8 @@ typedef struct tcb_t {
 } tcb_t;
 
 extern int YKCtxSwCount;
-extern int YKIdleCount;
-extern int YKTickNum;
+extern unsigned YKIdleCount;
+extern unsigned YKTickNum;
 extern int YKISRDepth;
 extern int YKRunFlag;
 
@@ -66,8 +66,8 @@ void YKBlockTask(tcb_t *task);
 void YKBlock2Ready(tcb_t *task);
 # 2 "yakc.c" 2
 int YKCtxSwCount;
-int YKTickNum;
-int YKIdleCount;
+unsigned YKTickNum;
+unsigned YKIdleCount;
 int YKISRDepth;
 int YKRunFlag;
 
@@ -78,10 +78,33 @@ tcb_t YKTCBArray[3 +1];
 tcb_t *YKCurrTask;
 int YKIdleTaskStack[256];
 
-
 void YKIdleTask(void) {
-    while(1){}
+    while(1){
+        ++YKIdleCount;
+    }
 }
+
+void YKInitialize(void) {
+    void (*idle_task_p)(void);
+    void *idle_task_stack_p;
+    int lowest_priority = 100;
+    YKCtxSwCount = 0;
+    YKTickNum = 0;
+    YKIdleCount = 0;
+    YKISRDepth = 0;
+    YKRunFlag = 0;
+    YKRdyList = 0;
+    YKCurrTask = 0;
+    idle_task_p = YKIdleTask;
+    idle_task_stack_p = YKIdleTaskStack;
+    lowest_priority = 100;
+
+    YKAvailTCBList = YKTCBArray;
+    YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority);
+}
+
+
+
 
 
 void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
@@ -104,6 +127,8 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     cur_tcb->priority = priority;
     cur_tcb->state = READY;
     cur_tcb->delay = 0;
+    cur_tcb->prev = 0;
+    cur_tcb->next = 0;
     YKAddReadyTask(cur_tcb);
 
     if (YKRunFlag) {
@@ -111,28 +136,8 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     }
 }
 
-void YKInitialize(void) {
-    void (*idle_task_p)(void);
-    void *idle_task_stack_p;
-    int lowest_priority = 100;
-    YKCtxSwCount = 0;
-    YKTickNum = 0;
-    YKIdleCount = 0;
-    YKISRDepth = 0;
-    YKRunFlag = 0;
-    YKRdyList = 0;
-
-    idle_task_p = YKIdleTask;
-    idle_task_stack_p = YKIdleTaskStack;
-    lowest_priority = 100;
-
-    YKAvailTCBList = YKTCBArray;
-    YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority);
-}
-
 void YKRun(void) {
     YKRunFlag = 1;
-    YKCurrTask = YKRdyList;
     YKScheduler();
 }
 
@@ -149,21 +154,21 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
     }
     else {
         tcb_t *iter = YKRdyList;
+        int moved_to_top = 1;
         while (cur_tcb->priority > iter->priority) {
             iter = iter->next;
+            moved_to_top = 0;
         }
         cur_tcb->next = iter;
+        if (iter->prev)
+            iter->prev->next = cur_tcb;
+
         cur_tcb->prev = iter->prev;
-        iter->prev->next = cur_tcb;
         iter->prev = cur_tcb;
+
+        if (moved_to_top)
+            YKRdyList = cur_tcb;
+
     }
     return;
-}
-
-
-
-
-int main() {
-    YKIdleTask();
-    return 1;
 }

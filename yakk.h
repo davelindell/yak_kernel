@@ -30,8 +30,8 @@ typedef struct tcb_t {
 } tcb_t;
 
 extern int YKCtxSwCount;
-extern int YKIdleCount;
-extern int YKTickNum;
+extern unsigned YKIdleCount;
+extern unsigned YKTickNum;
 extern int YKISRDepth;
 extern int YKRunFlag;
 
