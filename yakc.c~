@@ -5,6 +5,7 @@ unsigned YKIdleCount;
 int YKISRDepth;
 int YKRunFlag;
 
+
 tcb_t *YKRdyList;        /* a list of TCBs of all ready tasks in order of decreasing priority */
 tcb_t *YKBlockList;      /* tasks delayed or suspended */
 tcb_t *YKAvailTCBList;       /* a list of available TCBs */
@@ -111,6 +112,10 @@ void YKDelayTask(unsigned count) {
     // modify tcb to add delay count
     YKCurrTask->delay = count;
 
+    // readjust ready list
+    YKReadyList = YKCurrTask->next;
+    YKReadyList->prev = NULL;
+
     // put tcb in blocked list
     if (YKBlockList == NULL) {
         YKBlockList = YKCurrTask;
@@ -132,12 +137,22 @@ void YKDelayTask(unsigned count) {
         if (moved_to_top)
             YKBlockList = YKCurrTask;
     }
-  
-    // readjust ready list
-    YKReadyList = YKCurrTask->next;
-    YKReadyList->prev = NULL;
 
     // call scheduler
     YKScheduler();
 }
+
+void YKEnterISR(void) {
+    ++YKISRDepth;
+}
+void YKExitISR(void) {
+    --YKISRDepth;
+    if (YKISRDepth == 0) {
+        YKScheduler();
+    }
+}
+
+
+
+
 
