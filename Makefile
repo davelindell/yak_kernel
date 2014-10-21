@@ -12,8 +12,8 @@ yakc.s: yakc.c
 	
 
 lab4b_app.s: lab4b_app.c
-	cpp lab4b_app.c lab4b_app.i
-	c86 -g lab4b_app.i lab4b_app.s
+	cpp lab4c_app.c lab4c_app.i
+	c86 -g lab4c_app.i lab4c_app.s
 
 myinth.s: myinth.c
 	cpp myinth.c myinth.i

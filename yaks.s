@@ -65,3 +65,6 @@ YKEnterMutex:
 YKExitMutex:
     sti
     ret
+   
+
+
