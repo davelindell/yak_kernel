@@ -9,11 +9,11 @@ void handleReset() {
 
 void handleTick() {
 	tcb_t* current;
-    tcb_t* temp;
+	tcb_t* temp;
     ++YKTickNum;
-    //printNewLine();
-   // printString("TICK ");
-    //printInt(YKTickNum);
+    printNewLine();
+    printString("TICK ");
+    printInt(YKTickNum);
     printNewLine();
 
 	current = YKBlockList;

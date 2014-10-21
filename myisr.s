@@ -17,9 +17,9 @@ ISRReset:
     call handleReset
     ; disable interrupts
     cli
-	call YKExitISR
     ; Signal PIC that handler has finished
     call signalEOI
+	call YKExitISR
     ; restore context
     pop es
     pop ds
@@ -52,9 +52,9 @@ ISRTick:
     call handleTick
     ; disable interrupts
     cli
-	call YKExitISR
     ; Signal PIC that handler has finished
     call signalEOI
+	call YKExitISR
     ; restore context
     pop es
     pop ds
@@ -87,9 +87,9 @@ ISRKeyboard:
     call handleKeyboard
     ; disable interrupts
     cli
-	call YKExitISR
     ; Signal PIC that handler has finished
     call signalEOI
+	call YKExitISR
     ; restore context
     pop es
     pop ds

@@ -50,24 +50,27 @@ L_yakc_8:
 	; >>>>> YKRunFlag = 0; 
 	mov	word [YKRunFlag], 0
 	; >>>>> Line:	31
+	; >>>>> YKBlockList = 0; 
+	mov	word [YKBlockList], 0
+	; >>>>> Line:	32
 	; >>>>> YKRdyList = 0; 
 	mov	word [YKRdyList], 0
-	; >>>>> Line:	32
+	; >>>>> Line:	33
 	; >>>>> YKCurrTask = 0; 
 	mov	word [YKCurrTask], 0
-	; >>>>> Line:	33
+	; >>>>> Line:	34
 	; >>>>> idle_task_p = YKIdleTask; 
 	mov	word [bp-2], YKIdleTask
-	; >>>>> Line:	34
+	; >>>>> Line:	35
 	; >>>>> idle_task_stack_p = YKIdleTaskStack; 
 	mov	word [bp-4], YKIdleTaskStack
-	; >>>>> Line:	35
+	; >>>>> Line:	36
 	; >>>>> lowest_priority = 100; 
 	mov	word [bp-6], 100
-	; >>>>> Line:	37
+	; >>>>> Line:	38
 	; >>>>> YKAvailTCBList = YKTCBArray; 
 	mov	word [YKAvailTCBList], YKTCBArray
-	; >>>>> Line:	38
+	; >>>>> Line:	39
 	; >>>>> YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority); 
 	push	word [bp-6]
 	push	word [bp-4]
@@ -84,127 +87,127 @@ L_yakc_7:
 	jmp	L_yakc_8
 	ALIGN	2
 YKNewTask:
-	; >>>>> Line:	45
-	; >>>>> void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) { 
+	; >>>>> Line:	46
+	; >>>>> READY; 
 	jmp	L_yakc_10
 L_yakc_11:
-	; >>>>> Line:	47
+	; >>>>> Line:	48
 	; >>>>> YKAvailTCBList++; 
 	mov	ax, word [YKAvailTCBList]
 	mov	word [bp-2], ax
-	; >>>>> Line:	47
+	; >>>>> Line:	48
 	; >>>>> YKAvailTCBList++; 
 	add	word [YKAvailTCBList], 38
-	; >>>>> Line:	48
+	; >>>>> Line:	49
 	; >>>>> cur_tcb->ax = 0; 
 	mov	si, word [bp-2]
 	mov	word [si], 0
-	; >>>>> Line:	49
+	; >>>>> Line:	50
 	; >>>>> cur_tcb->bx = 0; 
 	mov	si, word [bp-2]
 	add	si, 2
 	mov	word [si], 0
-	; >>>>> Line:	50
+	; >>>>> Line:	51
 	; >>>>> cur_tcb->cx = 0; 
 	mov	si, word [bp-2]
 	add	si, 4
 	mov	word [si], 0
-	; >>>>> Line:	51
+	; >>>>> Line:	52
 	; >>>>> cur_tcb->dx = 0; 
 	mov	si, word [bp-2]
 	add	si, 6
 	mov	word [si], 0
-	; >>>>> Line:	52
+	; >>>>> Line:	53
 	; >>>>> cur_tcb->ip = task; 
 	mov	si, word [bp-2]
 	add	si, 8
 	mov	ax, word [bp+4]
 	mov	word [si], ax
-	; >>>>> Line:	53
+	; >>>>> Line:	54
 	; >>>>> cur_tcb->sp = taskStack; 
 	mov	si, word [bp-2]
 	add	si, 10
 	mov	ax, word [bp+6]
 	mov	word [si], ax
-	; >>>>> Line:	54
+	; >>>>> Line:	55
 	; >>>>> cur_tcb->bp = taskStack; 
 	mov	si, word [bp-2]
 	add	si, 12
 	mov	ax, word [bp+6]
 	mov	word [si], ax
-	; >>>>> Line:	55
+	; >>>>> Line:	56
 	; >>>>> cur_tcb->si = 0; 
 	mov	si, word [bp-2]
 	add	si, 14
 	mov	word [si], 0
-	; >>>>> Line:	56
+	; >>>>> Line:	57
 	; >>>>> cur_tcb->di = 0; 
 	mov	si, word [bp-2]
 	add	si, 16
 	mov	word [si], 0
-	; >>>>> Line:	57
+	; >>>>> Line:	58
 	; >>>>> cur_tcb->cs = 0; 
 	mov	si, word [bp-2]
 	add	si, 18
 	mov	word [si], 0
-	; >>>>> Line:	58
+	; >>>>> Line:	59
 	; >>>>> cur_tcb->ss = 0; 
 	mov	si, word [bp-2]
 	add	si, 20
 	mov	word [si], 0
-	; >>>>> Line:	59
+	; >>>>> Line:	60
 	; >>>>> cur_tcb->ds = 0; 
 	mov	si, word [bp-2]
 	add	si, 22
 	mov	word [si], 0
-	; >>>>> Line:	60
+	; >>>>> Line:	61
 	; >>>>> cur_tcb->es = 0; 
 	mov	si, word [bp-2]
 	add	si, 24
 	mov	word [si], 0
-	; >>>>> Line:	61
+	; >>>>> Line:	62
 	; >>>>> cur_tcb->flags = 512; 
 	mov	si, word [bp-2]
 	add	si, 26
 	mov	word [si], 512
-	; >>>>> Line:	62
+	; >>>>> Line:	63
 	; >>>>> cur_tcb->priority = priority; 
 	mov	al, byte [bp+8]
 	xor	ah, ah
 	mov	si, word [bp-2]
 	add	si, 28
 	mov	word [si], ax
-	; >>>>> Line:	63
+	; >>>>> Line:	64
 	; >>>>> cur_tcb->state = READY; 
 	mov	si, word [bp-2]
 	add	si, 30
 	mov	word [si], 0
-	; >>>>> Line:	64
+	; >>>>> Line:	65
 	; >>>>> cur_tcb->delay = 0; 
 	mov	si, word [bp-2]
 	add	si, 32
 	mov	word [si], 0
-	; >>>>> Line:	65
+	; >>>>> Line:	66
 	; >>>>> cur_tcb->prev = 0; 
 	mov	si, word [bp-2]
 	add	si, 34
 	mov	word [si], 0
-	; >>>>> Line:	66
-	; >>>>> cur_tcb->next = 0; 
+	; >>>>> Line:	67
+	; >>>>> r->next; 
 	mov	si, word [bp-2]
 	add	si, 36
 	mov	word [si], 0
-	; >>>>> Line:	67
-	; >>>>> _to_top  
+	; >>>>> Line:	68
+	; >>>>> YKAddReadyTask(cur_tcb); 
 	push	word [bp-2]
 	call	YKAddReadyTask
 	add	sp, 2
-	; >>>>> Line:	69
+	; >>>>> Line:	70
 	; >>>>> if (YKRunFlag) { 
 	mov	ax, word [YKRunFlag]
 	test	ax, ax
 	je	L_yakc_12
-	; >>>>> Line:	70
+	; >>>>> Line:	71
 	; >>>>> YKScheduler(); 
 	call	YKScheduler
 L_yakc_12:
@@ -218,14 +221,14 @@ L_yakc_10:
 	jmp	L_yakc_11
 	ALIGN	2
 YKRun:
-	; >>>>> Line:	74
+	; >>>>> Line:	75
 	; >>>>> void YKRun(void) { 
 	jmp	L_yakc_14
 L_yakc_15:
-	; >>>>> Line:	75
+	; >>>>> Line:	76
 	; >>>>> YKRunFlag = 1; 
 	mov	word [YKRunFlag], 1
-	; >>>>> Line:	76
+	; >>>>> Line:	77
 	; >>>>> YKScheduler(); 
 	call	YKScheduler
 	mov	sp, bp
@@ -237,16 +240,16 @@ L_yakc_14:
 	jmp	L_yakc_15
 	ALIGN	2
 YKScheduler:
-	; >>>>> Line:	79
+	; >>>>> Line:	80
 	; >>>>> void YKScheduler(void) { 
 	jmp	L_yakc_17
 L_yakc_18:
-	; >>>>> Line:	80
+	; >>>>> Line:	81
 	; >>>>> if (YKCurrTask != YKRdyList) { 
 	mov	ax, word [YKRdyList]
 	cmp	ax, word [YKCurrTask]
 	je	L_yakc_19
-	; >>>>> Line:	81
+	; >>>>> Line:	82
 	; >>>>> YKDispatcher(); 
 	call	YKDispatcher
 L_yakc_19:
@@ -259,38 +262,38 @@ L_yakc_17:
 	jmp	L_yakc_18
 	ALIGN	2
 YKAddReadyTask:
-	; >>>>> Line:	86
+	; >>>>> Line:	87
 	; >>>>> void YKAddReadyTask(tcb_t *cur_tcb) { 
 	jmp	L_yakc_21
 L_yakc_22:
-	; >>>>> Line:	87
+	; >>>>> Line:	88
 	; >>>>> if(YKRdyList == 0) { 
 	mov	ax, word [YKRdyList]
 	test	ax, ax
 	jne	L_yakc_23
-	; >>>>> Line:	88
+	; >>>>> Line:	89
 	; >>>>> YKRdyList = cur_tcb; 
 	mov	ax, word [bp+4]
 	mov	word [YKRdyList], ax
 	jmp	L_yakc_24
 L_yakc_23:
-	; >>>>> Line:	93
+	; >>>>> Line:	94
 	; >>>>> while (cur_tcb->priority > iter->priority) { 
 	mov	ax, word [YKRdyList]
 	mov	word [bp-2], ax
 	mov	word [bp-4], 1
-	; >>>>> Line:	93
+	; >>>>> Line:	94
 	; >>>>> while (cur_tcb->priority > iter->priority) { 
 	jmp	L_yakc_26
 L_yakc_25:
-	; >>>>> Line:	94
+	; >>>>> Line:	95
 	; >>>>> iter = iter->next; 
 	mov	si, word [bp-2]
 	add	si, 36
 	mov	ax, word [si]
 	mov	word [bp-2], ax
-	; >>>>> Line:	95
-	; >>>>> YKBlockList; 
+	; >>>>> Line:	96
+	; >>>>>  
 	mov	word [bp-4], 0
 L_yakc_26:
 	mov	si, word [bp+4]
@@ -301,20 +304,20 @@ L_yakc_26:
 	cmp	ax, word [si]
 	jl	L_yakc_25
 L_yakc_27:
-	; >>>>> Line:	97
+	; >>>>> Line:	98
 	; >>>>> cur_tcb->next = iter; 
 	mov	si, word [bp+4]
 	add	si, 36
 	mov	ax, word [bp-2]
 	mov	word [si], ax
-	; >>>>> Line:	98
+	; >>>>> Line:	99
 	; >>>>> if (iter->prev) 
 	mov	si, word [bp-2]
 	add	si, 34
 	mov	ax, word [si]
 	test	ax, ax
 	je	L_yakc_28
-	; >>>>> Line:	99
+	; >>>>> Line:	100
 	; >>>>> iter->prev->next = cur_tcb; 
 	mov	si, word [bp-2]
 	add	si, 34
@@ -323,7 +326,7 @@ L_yakc_27:
 	mov	ax, word [bp+4]
 	mov	word [si], ax
 L_yakc_28:
-	; >>>>> Line:	101
+	; >>>>> Line:	102
 	; >>>>> cur_tcb->prev = iter->prev; 
 	mov	si, word [bp-2]
 	add	si, 34
@@ -331,25 +334,25 @@ L_yakc_28:
 	add	di, 34
 	mov	ax, word [si]
 	mov	word [di], ax
-	; >>>>> Line:	102
+	; >>>>> Line:	103
 	; >>>>> iter->prev = cur_tcb; 
 	mov	si, word [bp-2]
 	add	si, 34
 	mov	ax, word [bp+4]
 	mov	word [si], ax
-	; >>>>> Line:	104
+	; >>>>> Line:	105
 	; >>>>> if (moved_to_top) 
 	mov	ax, word [bp-4]
 	test	ax, ax
 	je	L_yakc_29
-	; >>>>> Line:	105
+	; >>>>> Line:	106
 	; >>>>> YKRdyList = cur_tcb; 
 	mov	ax, word [bp+4]
 	mov	word [YKRdyList], ax
 L_yakc_29:
 L_yakc_24:
 L_yakc_30:
-	; >>>>> Line:	108
+	; >>>>> Line:	109
 	; >>>>> return; 
 	mov	sp, bp
 	pop	bp
@@ -361,54 +364,54 @@ L_yakc_21:
 	jmp	L_yakc_22
 	ALIGN	2
 YKDelayTask:
-	; >>>>> Line:	111
+	; >>>>> Line:	112
 	; >>>>> void YKDelayTask(unsigned count) { 
 	jmp	L_yakc_32
 L_yakc_33:
-	; >>>>> Line:	113
+	; >>>>> Line:	114
 	; >>>>> YKCurrTask->delay = count; 
 	mov	si, word [YKCurrTask]
 	add	si, 32
 	mov	ax, word [bp+4]
 	mov	word [si], ax
-	; >>>>> Line:	116
+	; >>>>> Line:	117
 	; >>>>> YKRdyList = YKCurrTask->next; 
 	mov	si, word [YKCurrTask]
 	add	si, 36
 	mov	ax, word [si]
 	mov	word [YKRdyList], ax
-	; >>>>> Line:	117
+	; >>>>> Line:	118
 	; >>>>> YKRdyList->prev = 0; 
 	mov	si, word [YKRdyList]
 	add	si, 34
 	mov	word [si], 0
-	; >>>>> Line:	120
+	; >>>>> Line:	121
 	; >>>>> if (YKBlockList == 0) { 
 	mov	ax, word [YKBlockList]
 	test	ax, ax
 	jne	L_yakc_34
-	; >>>>> Line:	121
+	; >>>>> Line:	122
 	; >>>>> YKBlockList = YKCurrTask; 
 	mov	ax, word [YKCurrTask]
 	mov	word [YKBlockList], ax
 	jmp	L_yakc_35
 L_yakc_34:
-	; >>>>> Line:	126
+	; >>>>> Line:	127
 	; >>>>> while (YKCurrTask->priority > iter->priority) { 
 	mov	ax, word [YKBlockList]
 	mov	word [bp-2], ax
 	mov	word [bp-4], 1
-	; >>>>> Line:	126
+	; >>>>> Line:	127
 	; >>>>> while (YKCurrTask->priority > iter->priority) { 
 	jmp	L_yakc_37
 L_yakc_36:
-	; >>>>> Line:	127
+	; >>>>> Line:	128
 	; >>>>> iter = iter->next; 
 	mov	si, word [bp-2]
 	add	si, 36
 	mov	ax, word [si]
 	mov	word [bp-2], ax
-	; >>>>> Line:	128
+	; >>>>> Line:	129
 	; >>>>> moved_to_top = 0; 
 	mov	word [bp-4], 0
 L_yakc_37:
@@ -420,20 +423,20 @@ L_yakc_37:
 	cmp	ax, word [si]
 	jl	L_yakc_36
 L_yakc_38:
-	; >>>>> Line:	130
+	; >>>>> Line:	131
 	; >>>>> YKCurrTask->next = iter; 
 	mov	si, word [YKCurrTask]
 	add	si, 36
 	mov	ax, word [bp-2]
 	mov	word [si], ax
-	; >>>>> Line:	131
+	; >>>>> Line:	132
 	; >>>>> if (iter->prev) 
 	mov	si, word [bp-2]
 	add	si, 34
 	mov	ax, word [si]
 	test	ax, ax
 	je	L_yakc_39
-	; >>>>> Line:	132
+	; >>>>> Line:	133
 	; >>>>> iter->prev->next = YKCurrTask; 
 	mov	si, word [bp-2]
 	add	si, 34
@@ -442,7 +445,7 @@ L_yakc_38:
 	mov	ax, word [YKCurrTask]
 	mov	word [si], ax
 L_yakc_39:
-	; >>>>> Line:	134
+	; >>>>> Line:	135
 	; >>>>> YKCurrTask->prev = iter->prev; 
 	mov	si, word [bp-2]
 	add	si, 34
@@ -450,24 +453,24 @@ L_yakc_39:
 	add	di, 34
 	mov	ax, word [si]
 	mov	word [di], ax
-	; >>>>> Line:	135
+	; >>>>> Line:	136
 	; >>>>> iter->prev = YKCurrTask; 
 	mov	si, word [bp-2]
 	add	si, 34
 	mov	ax, word [YKCurrTask]
 	mov	word [si], ax
-	; >>>>> Line:	137
+	; >>>>> Line:	138
 	; >>>>> if (moved_to_top) 
 	mov	ax, word [bp-4]
 	test	ax, ax
 	je	L_yakc_40
-	; >>>>> Line:	138
+	; >>>>> Line:	139
 	; >>>>> YKBlockList = YKCurrTask; 
 	mov	ax, word [YKCurrTask]
 	mov	word [YKBlockList], ax
 L_yakc_40:
 L_yakc_35:
-	; >>>>> Line:	142
+	; >>>>> Line:	143
 	; >>>>> YKScheduler(); 
 	call	YKScheduler
 	mov	sp, bp
@@ -480,11 +483,11 @@ L_yakc_32:
 	jmp	L_yakc_33
 	ALIGN	2
 YKEnterISR:
-	; >>>>> Line:	145
+	; >>>>> Line:	146
 	; >>>>> void YKEnterISR(void) { 
 	jmp	L_yakc_42
 L_yakc_43:
-	; >>>>> Line:	146
+	; >>>>> Line:	147
 	; >>>>> ++YKISRDepth; 
 	inc	word [YKISRDepth]
 	mov	sp, bp
@@ -496,19 +499,19 @@ L_yakc_42:
 	jmp	L_yakc_43
 	ALIGN	2
 YKExitISR:
-	; >>>>> Line:	148
+	; >>>>> Line:	149
 	; >>>>> void YKExitISR(void) { 
 	jmp	L_yakc_45
 L_yakc_46:
-	; >>>>> Line:	149
-	; >>>>> --YKISRDepth; 
-	dec	word [YKISRDepth]
 	; >>>>> Line:	150
-	; >>>>> if (YKIS 
+	; >>>>> --YKISRD 
+	dec	word [YKISRDepth]
+	; >>>>> Line:	151
+	; >>>>> if (YKISRDepth == 0) { 
 	mov	ax, word [YKISRDepth]
 	test	ax, ax
 	jne	L_yakc_47
-	; >>>>> Line:	151
+	; >>>>> Line:	152
 	; >>>>> YKScheduler(); 
 	call	YKScheduler
 L_yakc_47:

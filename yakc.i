@@ -94,6 +94,7 @@ void YKInitialize(void) {
     YKIdleCount = 0;
     YKISRDepth = 0;
     YKRunFlag = 0;
+ YKBlockList = 0;
     YKRdyList = 0;
     YKCurrTask = 0;
     idle_task_p = YKIdleTask;

@@ -100,11 +100,15 @@ void handleReset() {
 
 void handleTick() {
  tcb_t* current;
+<<<<<<< HEAD
+ tcb_t* temp;
+=======
     tcb_t* temp;
+>>>>>>> origin/master
     ++YKTickNum;
-
-
-
+    printNewLine();
+    printString("TICK ");
+    printInt(YKTickNum);
     printNewLine();
 
  current = YKBlockList;
