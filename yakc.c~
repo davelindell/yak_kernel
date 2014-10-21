@@ -1,6 +1,6 @@
 #include "yakk.h"
 int YKCtxSwCount;
-int YKTickNum;
+unsigned YKTickNum;
 unsigned YKIdleCount;
 int YKISRDepth;
 int YKRunFlag;
@@ -107,5 +107,37 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
     return;
 }
 
+void YKDelayTask(unsigned count) {
+    // modify tcb to add delay count
+    YKCurrTask->delay = count;
 
+    // put tcb in blocked list
+    if (YKBlockList == NULL) {
+        YKBlockList = YKCurrTask;
+    }
+    else {
+        tcb_t *iter = YKBlockList;
+        int moved_to_top = 1;
+        while (YKCurrTask->priority > iter->priority) {
+            iter = iter->next;
+            moved_to_top = 0;
+        }
+        YKCurrTask->next = iter;
+        if (iter->prev) 
+            iter->prev->next = YKCurrTask;  
+
+        YKCurrTask->prev = iter->prev;             
+        iter->prev = YKCurrTask;
+
+        if (moved_to_top)
+            YKBlockList = YKCurrTask;
+    }
+  
+    // readjust ready list
+    YKReadyList = YKCurrTask->next;
+    YKReadyList->prev = NULL;
+
+    // call scheduler
+    YKScheduler();
+}
 
