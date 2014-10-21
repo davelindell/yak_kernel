@@ -1,7 +1,13 @@
-# 1 "myinth.c"
+# 1 "lab4c_app.c"
 # 1 "<built-in>"
 # 1 "<command-line>"
-# 1 "myinth.c"
+# 1 "lab4c_app.c"
+
+
+
+
+
+
 # 1 "clib.h" 1
 
 
@@ -27,7 +33,7 @@ void exit(unsigned char code);
 
 
 void signalEOI(void);
-# 2 "myinth.c" 2
+# 8 "lab4c_app.c" 2
 # 1 "yakk.h" 1
 
 
@@ -90,74 +96,47 @@ void YKTickHandler(void);
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask(tcb_t *task);
 void YKBlock2Ready(tcb_t *task);
-# 3 "myinth.c" 2
-extern int KeyBuffer;
+# 9 "lab4c_app.c" 2
 
-void handleReset() {
-    exit(0);
+
+
+int TaskStack[256];
+
+void Task(void);
+
+void main(void)
+{
+    YKInitialize();
+
+    printString("Creating task...\n");
+    YKNewTask(Task, (void *) &TaskStack[256], 0);
+
+    printString("Starting kernel...\n");
+    YKRun();
 }
 
+void Task(void)
+{
+    unsigned idleCount;
+    unsigned numCtxSwitches;
 
-void handleTick() {
- tcb_t* current;
-    tcb_t* temp;
-    ++YKTickNum;
-    printNewLine();
-    printString("TICK ");
-    printInt(YKTickNum);
-    printNewLine();
+    printString("Task started.\n");
+    while (1)
+    {
+        printString("Delaying task...\n");
 
- current = YKBlockList;
+        YKDelayTask(2);
 
- while ( current )
- {
-  if ( current->state == DELAYED )
-  {
-   current->delay--;
-   if ( !current->delay )
-   {
-    temp = current->prev;
-    if ( temp ) temp->next = current->next;
-    else YKBlockList = current->next;
+        YKEnterMutex();
+        numCtxSwitches = YKCtxSwCount;
+        idleCount = YKIdleCount;
+        YKIdleCount = 0;
+        YKExitMutex();
 
-    temp = current->next;
-    if ( temp ) temp->prev = current->prev;
-
-    current->prev = 0;
-    current->next = 0;
-    current->state = READY;
-    YKAddReadyTask( current );
-    current = temp;
-   }
-  }
-  current = current->next;
- }
-    return;
-}
-
-
-void handleKeyboard() {
-    int i = 0;
-    if (KeyBuffer == 24178)
-        exit(0);
-    else if (KeyBuffer == 'd') {
-        printNewLine();
-        printString("DELAY KEY PRESSED");
-        for (i = 0; i < 10000; ++i){}
-        printNewLine();
-        printString("DELAY COMPLETE");
-        printNewLine();
+        printString("Task running after ");
+        printUInt(numCtxSwitches);
+        printString(" context switches! YKIdleCount is ");
+        printUInt(idleCount);
+        printString(".\n");
     }
-    else if (KeyBuffer == 24180) {
-        handleTick();
-    }
-    else {
-        printNewLine();
-        printString("KEYPRESS (");
-        printChar(KeyBuffer);
-        printString(") IGNORED");
-        printNewLine();
-    }
-    return;
-
 }

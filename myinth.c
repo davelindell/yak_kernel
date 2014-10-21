@@ -8,7 +8,8 @@ void handleReset() {
 
 
 void handleTick() {
-	tcb_t* current, temp;
+	tcb_t* current;
+    tcb_t* temp;
     ++YKTickNum;
     printNewLine();
     printString("TICK ");

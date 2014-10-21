@@ -21,3 +21,268 @@ L_myinth_1:
 	push	bp
 	mov	bp, sp
 	jmp	L_myinth_2
+L_myinth_4:
+	DB	"TICK ",0
+	ALIGN	2
+handleTick:
+	; >>>>> Line:	10
+	; >>>>> void handleTick() { 
+	jmp	L_myinth_5
+L_myinth_6:
+	; >>>>> Line:	13
+	; >>>>> ++YKTickNum; 
+	inc	word [YKTickNum]
+	; >>>>> Line:	14
+	; >>>>> printNewLine(); 
+	call	printNewLine
+	; >>>>> Line:	15
+	; >>>>> printString("TICK "); 
+	mov	ax, L_myinth_4
+	push	ax
+	call	printString
+	add	sp, 2
+	; >>>>> Line:	16
+	; >>>>> printInt(YKTickNum); 
+	push	word [YKTickNum]
+	call	printInt
+	add	sp, 2
+	; >>>>> Line:	17
+	; >>>>> printNewLine(); 
+	call	printNewLine
+	; >>>>> Line:	19
+	; >>>>> current = YKBlockList; 
+	mov	ax, word [YKBlockList]
+	mov	word [bp-2], ax
+	; >>>>> Line:	21
+	; >>>>> while ( current ) 
+	jmp	L_myinth_8
+L_myinth_7:
+	; >>>>> Line:	23
+	; >>>>> if ( current->state == DELAYED ) 
+	mov	si, word [bp-2]
+	add	si, 30
+	cmp	word [si], 1
+	jne	L_myinth_10
+	; >>>>> Line:	25
+	; >>>>> current->delay--; 
+	mov	si, word [bp-2]
+	add	si, 32
+	dec	word [si]
+	; >>>>> Line:	26
+	; >>>>> if ( !current->delay ) 
+	mov	si, word [bp-2]
+	add	si, 32
+	mov	ax, word [si]
+	test	ax, ax
+	jne	L_myinth_11
+	; >>>>> Line:	28
+	; >>>>> temp = current->prev; 
+	mov	si, word [bp-2]
+	add	si, 34
+	mov	ax, word [si]
+	mov	word [bp-4], ax
+	; >>>>> Line:	29
+	; >>>>> if ( temp ) temp->next = curr 
+	mov	ax, word [bp-4]
+	test	ax, ax
+	je	L_myinth_12
+	; >>>>> Line:	29
+	; >>>>> if ( temp ) temp->next = curr 
+	mov	si, word [bp-2]
+	add	si, 36
+	mov	di, word [bp-4]
+	add	di, 36
+	mov	ax, word [si]
+	mov	word [di], ax
+	jmp	L_myinth_13
+L_myinth_12:
+	; >>>>> Line:	30
+	; >>>>> else YKBlockList = current->next; 
+	mov	si, word [bp-2]
+	add	si, 36
+	mov	ax, word [si]
+	mov	word [YKBlockList], ax
+L_myinth_13:
+	; >>>>> Line:	32
+	; >>>>> temp = current->next; 
+	mov	si, word [bp-2]
+	add	si, 36
+	mov	ax, word [si]
+	mov	word [bp-4], ax
+	; >>>>> Line:	33
+	; >>>>> if ( temp ) temp->prev = current->prev; 
+	mov	ax, word [bp-4]
+	test	ax, ax
+	je	L_myinth_14
+	; >>>>> Line:	33
+	; >>>>> if ( temp ) temp->prev = current->prev; 
+	mov	si, word [bp-2]
+	add	si, 34
+	mov	di, word [bp-4]
+	add	di, 34
+	mov	ax, word [si]
+	mov	word [di], ax
+L_myinth_14:
+	; >>>>> Line:	35
+	; >>>>> current->prev = 0; 
+	mov	si, word [bp-2]
+	add	si, 34
+	mov	word [si], 0
+	; >>>>> Line:	36
+	; >>>>> current->next = 0; 
+	mov	si, word [bp-2]
+	add	si, 36
+	mov	word [si], 0
+	; >>>>> Line:	37
+	; >>>>> current->state = READY; 
+	mov	si, word [bp-2]
+	add	si, 30
+	mov	word [si], 0
+	; >>>>> Line:	38
+	; >>>>> YKAddReadyTask( current ); 
+	push	word [bp-2]
+	call	YKAddReadyTask
+	add	sp, 2
+	; >>>>> Line:	39
+	; >>>>> current = temp; 
+	mov	ax, word [bp-4]
+	mov	word [bp-2], ax
+L_myinth_11:
+L_myinth_10:
+	; >>>>> Line:	42
+	; >>>>> current = current->next; 
+	mov	si, word [bp-2]
+	add	si, 36
+	mov	ax, word [si]
+	mov	word [bp-2], ax
+L_myinth_8:
+	mov	ax, word [bp-2]
+	test	ax, ax
+	jne	L_myinth_7
+L_myinth_9:
+L_myinth_15:
+	; >>>>> Line:	44
+	; >>>>> return; 
+	mov	sp, bp
+	pop	bp
+	ret
+L_myinth_5:
+	push	bp
+	mov	bp, sp
+	sub	sp, 4
+	jmp	L_myinth_6
+L_myinth_20:
+	DB	") IGNORED",0
+L_myinth_19:
+	DB	"KEYPRESS (",0
+L_myinth_18:
+	DB	"DELAY COMPLETE",0
+L_myinth_17:
+	DB	"DELAY KEY PRESSED",0
+	ALIGN	2
+handleKeyboard:
+	; >>>>> Line:	48
+	; >>>>> void handleKeyboard() { 
+	jmp	L_myinth_21
+L_myinth_22:
+	; >>>>> Line:	50
+	; >>>>> if (KeyBuffer == 24178) 
+	mov	word [bp-2], 0
+	; >>>>> Line:	50
+	; >>>>> if (KeyBuffer == 24178) 
+	cmp	word [KeyBuffer], 24178
+	jne	L_myinth_23
+	; >>>>> Line:	51
+	; >>>>> exit(0); 
+	xor	al, al
+	push	ax
+	call	exit
+	add	sp, 2
+	jmp	L_myinth_24
+L_myinth_23:
+	; >>>>> Line:	52
+	; >>>>> else if (KeyBuffer == 'd') { 
+	cmp	word [KeyBuffer], 100
+	jne	L_myinth_25
+	; >>>>> Line:	53
+	; >>>>> printNewLine(); 
+	call	printNewLine
+	; >>>>> Line:	54
+	; >>>>> printString("DELAY KEY PRESSED"); 
+	mov	ax, L_myinth_17
+	push	ax
+	call	printString
+	add	sp, 2
+	; >>>>> Line:	55
+	; >>>>> for (i = 0; i < 1000 
+	mov	word [bp-2], 0
+	jmp	L_myinth_27
+L_myinth_26:
+L_myinth_29:
+	; >>>>> Line:	55
+	; >>>>> for (i = 0; i < 1000 
+	inc	word [bp-2]
+L_myinth_27:
+	cmp	word [bp-2], 10000
+	jl	L_myinth_26
+L_myinth_28:
+	; >>>>> Line:	56
+	; >>>>> printNewLine(); 
+	call	printNewLine
+	; >>>>> Line:	57
+	; >>>>> printString("DELAY COMPLETE"); 
+	mov	ax, L_myinth_18
+	push	ax
+	call	printString
+	add	sp, 2
+	; >>>>> Line:	58
+	; >>>>> printNewLine(); 
+	call	printNewLine
+	jmp	L_myinth_30
+L_myinth_25:
+	; >>>>> Line:	60
+	; >>>>> else if (KeyBuffer == 24180) { 
+	cmp	word [KeyBuffer], 24180
+	jne	L_myinth_31
+	; >>>>> Line:	61
+	; >>>>> handleTick(); 
+	call	handleTick
+	jmp	L_myinth_32
+L_myinth_31:
+	; >>>>> Line:	64
+	; >>>>> printNewLine(); 
+	call	printNewLine
+	; >>>>> Line:	65
+	; >>>>> printString("KEYPRESS ("); 
+	mov	ax, L_myinth_19
+	push	ax
+	call	printString
+	add	sp, 2
+	; >>>>> Line:	66
+	; >>>>> printChar(KeyBuffer); 
+	push	word [KeyBuffer]
+	call	printChar
+	add	sp, 2
+	; >>>>> Line:	67
+	; >>>>> printString(") IGNORED"); 
+	mov	ax, L_myinth_20
+	push	ax
+	call	printString
+	add	sp, 2
+	; >>>>> Line:	68
+	; >>>>> printNewLine(); 
+	call	printNewLine
+L_myinth_32:
+L_myinth_30:
+L_myinth_24:
+L_myinth_33:
+	; >>>>> Line:	70
+	; >>>>> return; 
+	mov	sp, bp
+	pop	bp
+	ret
+L_myinth_21:
+	push	bp
+	mov	bp, sp
+	push	cx
+	jmp	L_myinth_22

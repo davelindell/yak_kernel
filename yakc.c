@@ -113,8 +113,8 @@ void YKDelayTask(unsigned count) {
     YKCurrTask->delay = count;
 
     // readjust ready list
-    YKReadyList = YKCurrTask->next;
-    YKReadyList->prev = NULL;
+    YKRdyList = YKCurrTask->next;
+    YKRdyList->prev = NULL;
 
     // put tcb in blocked list
     if (YKBlockList == NULL) {

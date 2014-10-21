@@ -71,6 +71,7 @@ unsigned YKIdleCount;
 int YKISRDepth;
 int YKRunFlag;
 
+
 tcb_t *YKRdyList;
 tcb_t *YKBlockList;
 tcb_t *YKAvailTCBList;
@@ -171,4 +172,48 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
 
     }
     return;
+}
+
+void YKDelayTask(unsigned count) {
+
+    YKCurrTask->delay = count;
+
+
+    YKRdyList = YKCurrTask->next;
+    YKRdyList->prev = 0;
+
+
+    if (YKBlockList == 0) {
+        YKBlockList = YKCurrTask;
+    }
+    else {
+        tcb_t *iter = YKBlockList;
+        int moved_to_top = 1;
+        while (YKCurrTask->priority > iter->priority) {
+            iter = iter->next;
+            moved_to_top = 0;
+        }
+        YKCurrTask->next = iter;
+        if (iter->prev)
+            iter->prev->next = YKCurrTask;
+
+        YKCurrTask->prev = iter->prev;
+        iter->prev = YKCurrTask;
+
+        if (moved_to_top)
+            YKBlockList = YKCurrTask;
+    }
+
+
+    YKScheduler();
+}
+
+void YKEnterISR(void) {
+    ++YKISRDepth;
+}
+void YKExitISR(void) {
+    --YKISRDepth;
+    if (YKISRDepth == 0) {
+        YKScheduler();
+    }
 }
