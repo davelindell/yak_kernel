@@ -45,14 +45,12 @@ ISRTick:
     push di
     push ds
     push es
-	call YKEnterISR
     ; enable interrupts
     sti
     ; call interrupt handler
     call handleTick
     ; disable interrupts
     cli
-	call YKExitISR
     ; Signal PIC that handler has finished
     call signalEOI
     ; restore context
@@ -80,14 +78,12 @@ ISRKeyboard:
     push di
     push ds
     push es
-	call YKEnterISR
     ; enable interrupts
     sti
     ; call interrupt handler
     call handleKeyboard
     ; disable interrupts
     cli
-	call YKExitISR
     ; Signal PIC that handler has finished
     call signalEOI
     ; restore context
