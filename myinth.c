@@ -8,13 +8,14 @@ void handleReset() {
 
 
 void handleTick() {
+	tcb_t* current, temp;
     ++YKTickNum;
     printNewLine();
     printString("TICK ");
     printInt(YKTickNum);
     printNewLine();
 
-	tcb_t* current = YKBlockList;
+	current = YKBlockList;
 
 	while ( current )
 	{
@@ -23,7 +24,7 @@ void handleTick() {
 			current->delay--;
 			if ( !current->delay )
 			{
-				tcb_t* temp = current->prev;
+				temp = current->prev;
 				if ( temp ) temp->next = current->next;
 				else		YKBlockList = current->next;
 
