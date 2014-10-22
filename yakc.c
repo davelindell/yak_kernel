@@ -83,12 +83,12 @@ void YKRun(void) {
 
 void YKScheduler(void) {
     if (YKCurrTask != YKRdyList) { // going to change contexts
-		printString("DispatchingTask: ");
+		/*printString("DispatchingTask: ");
 		printInt(YKRdyList);
 		printNewLine();
 		printString("CurTask: ");
 		printInt(YKCurrTask);
-		printNewLine();
+		printNewLine();*/
         YKDispatcher();
     }
 }
