@@ -1,6 +1,7 @@
 #ifndef YAKK_H
 #define YAKK_H
 #include "yaku.h"
+#include "clib.h"
 #define STACK_SIZE 256
 #define NULL 0
 #endif

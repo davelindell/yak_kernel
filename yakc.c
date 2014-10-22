@@ -14,7 +14,11 @@ tcb_t *YKCurrTask;
 int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
 
 void YKIdleTask(void) {
+	int dummy;
     while(1){
+		++dummy;
+		--dummy;
+		++dummy;
         ++YKIdleCount;
     }
 }
@@ -32,7 +36,7 @@ void YKInitialize(void) {
     YKRdyList = NULL;    
     YKCurrTask = NULL;
     idle_task_p = YKIdleTask;
-    idle_task_stack_p = YKIdleTaskStack;
+    idle_task_stack_p = YKIdleTaskStack + IDLE_STACK_SIZE - 1;
     lowest_priority = 100;
 
     YKAvailTCBList = YKTCBArray;
@@ -79,6 +83,12 @@ void YKRun(void) {
 
 void YKScheduler(void) {
     if (YKCurrTask != YKRdyList) { // going to change contexts
+		printString("DispatchingTask: ");
+		printInt(YKRdyList);
+		printNewLine();
+		printString("CurTask: ");
+		printInt(YKCurrTask);
+		printNewLine();
         YKDispatcher();
     }
 }
@@ -104,7 +114,6 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
 
         if (moved_to_top)
             YKRdyList = cur_tcb;
-        
     }
     return;
 }
@@ -112,6 +121,7 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
 void YKDelayTask(unsigned count) {
     // modify tcb to add delay count
     YKCurrTask->delay = count;
+	YKCurrTask->state = DELAYED;
 
     // readjust ready list
     YKRdyList = YKCurrTask->next;
@@ -120,6 +130,7 @@ void YKDelayTask(unsigned count) {
     // put tcb in blocked list
     if (YKBlockList == NULL) {
         YKBlockList = YKCurrTask;
+		YKBlockList->next = 0;
     }
     else {
         tcb_t *iter = YKBlockList;

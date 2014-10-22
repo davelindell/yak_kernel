@@ -1,6 +1,8 @@
 #include "clib.h"
 #include "yakk.h"
+
 extern int KeyBuffer;
+
 
 void handleReset() {
     exit(0);   
@@ -37,6 +39,7 @@ void handleTick() {
 				current->state = READY;
 				YKAddReadyTask( current );
 				current = temp;
+				continue;
 			}
 		}
 		current = current->next;
