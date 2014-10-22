@@ -78,7 +78,7 @@ L_lab4c_app_12:
 	call	printString
 	add	sp, 2
 	; >>>>> Line:	37
-	; >>>>>  
+	; >>>>> YKDelayTask(2); 
 	mov	ax, 2
 	push	ax
 	call	YKDelayTask
@@ -91,7 +91,7 @@ L_lab4c_app_12:
 	mov	ax, word [YKCtxSwCount]
 	mov	word [bp-4], ax
 	; >>>>> Line:	41
-	; >>>>> idleCount = YKIdleCount; 
+	; >>>>> idleCount =  
 	mov	ax, word [YKIdleCount]
 	mov	word [bp-2], ax
 	; >>>>> Line:	42

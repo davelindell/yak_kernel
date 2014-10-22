@@ -33,6 +33,32 @@ void signalEOI(void);
 
 # 1 "yaku.h" 1
 # 4 "yakk.h" 2
+# 1 "clib.h" 1
+
+
+
+void print(char *string, int length);
+void printNewLine(void);
+void printChar(char c);
+void printString(char *string);
+
+
+void printInt(int val);
+void printLong(long val);
+void printUInt(unsigned val);
+void printULong(unsigned long val);
+
+
+void printByte(char val);
+void printWord(int val);
+void printDWord(long val);
+
+
+void exit(unsigned char code);
+
+
+void signalEOI(void);
+# 5 "yakk.h" 2
 
 
 
@@ -70,7 +96,7 @@ extern int YKRunFlag;
 extern tcb_t *YKRdyList;
 extern tcb_t *YKBlockList;
 extern tcb_t *YKAvailTCBList;
-extern tcb_t YKTCBArray[3 +1];
+extern tcb_t YKTCBArray[4 +1];
 extern tcb_t *YKCurrTask;
 extern int YKIdleTaskStack[256];
 
@@ -91,7 +117,9 @@ void YKAddReadyTask(tcb_t* task);
 void YKBlockTask(tcb_t *task);
 void YKBlock2Ready(tcb_t *task);
 # 3 "myinth.c" 2
+
 extern int KeyBuffer;
+
 
 void handleReset() {
     exit(0);
@@ -102,9 +130,9 @@ void handleTick() {
  tcb_t* current;
     tcb_t* temp;
     ++YKTickNum;
-
-
-
+    printNewLine();
+    printString("TICK ");
+    printInt(YKTickNum);
     printNewLine();
 
  current = YKBlockList;
@@ -128,6 +156,7 @@ void handleTick() {
     current->state = READY;
     YKAddReadyTask( current );
     current = temp;
+    continue;
    }
   }
   current = current->next;

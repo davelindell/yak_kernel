@@ -7,6 +7,32 @@
 
 # 1 "yaku.h" 1
 # 4 "yakk.h" 2
+# 1 "clib.h" 1
+
+
+
+void print(char *string, int length);
+void printNewLine(void);
+void printChar(char c);
+void printString(char *string);
+
+
+void printInt(int val);
+void printLong(long val);
+void printUInt(unsigned val);
+void printULong(unsigned long val);
+
+
+void printByte(char val);
+void printWord(int val);
+void printDWord(long val);
+
+
+void exit(unsigned char code);
+
+
+void signalEOI(void);
+# 5 "yakk.h" 2
 
 
 
@@ -44,7 +70,7 @@ extern int YKRunFlag;
 extern tcb_t *YKRdyList;
 extern tcb_t *YKBlockList;
 extern tcb_t *YKAvailTCBList;
-extern tcb_t YKTCBArray[3 +1];
+extern tcb_t YKTCBArray[4 +1];
 extern tcb_t *YKCurrTask;
 extern int YKIdleTaskStack[256];
 
@@ -75,12 +101,16 @@ int YKRunFlag;
 tcb_t *YKRdyList;
 tcb_t *YKBlockList;
 tcb_t *YKAvailTCBList;
-tcb_t YKTCBArray[3 +1];
+tcb_t YKTCBArray[4 +1];
 tcb_t *YKCurrTask;
 int YKIdleTaskStack[256];
 
 void YKIdleTask(void) {
+ int dummy;
     while(1){
+  ++dummy;
+  --dummy;
+  ++dummy;
         ++YKIdleCount;
     }
 }
@@ -98,7 +128,7 @@ void YKInitialize(void) {
     YKRdyList = 0;
     YKCurrTask = 0;
     idle_task_p = YKIdleTask;
-    idle_task_stack_p = YKIdleTaskStack;
+    idle_task_stack_p = YKIdleTaskStack + 256 - 1;
     lowest_priority = 100;
 
     YKAvailTCBList = YKTCBArray;
@@ -145,6 +175,12 @@ void YKRun(void) {
 
 void YKScheduler(void) {
     if (YKCurrTask != YKRdyList) {
+
+
+
+
+
+
         YKDispatcher();
     }
 }
@@ -170,7 +206,6 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
 
         if (moved_to_top)
             YKRdyList = cur_tcb;
-
     }
     return;
 }
@@ -178,6 +213,7 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
 void YKDelayTask(unsigned count) {
 
     YKCurrTask->delay = count;
+ YKCurrTask->state = DELAYED;
 
 
     YKRdyList = YKCurrTask->next;
@@ -186,6 +222,7 @@ void YKDelayTask(unsigned count) {
 
     if (YKBlockList == 0) {
         YKBlockList = YKCurrTask;
+  YKBlockList->next = 0;
     }
     else {
         tcb_t *iter = YKBlockList;

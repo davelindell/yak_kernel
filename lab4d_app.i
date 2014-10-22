@@ -1,7 +1,7 @@
-# 1 "lab4c_app.c"
+# 1 "lab4d_app.c"
 # 1 "<built-in>"
 # 1 "<command-line>"
-# 1 "lab4c_app.c"
+# 1 "lab4d_app.c"
 
 
 
@@ -33,7 +33,7 @@ void exit(unsigned char code);
 
 
 void signalEOI(void);
-# 8 "lab4c_app.c" 2
+# 8 "lab4d_app.c" 2
 # 1 "yakk.h" 1
 
 
@@ -102,7 +102,7 @@ extern int YKRunFlag;
 extern tcb_t *YKRdyList;
 extern tcb_t *YKBlockList;
 extern tcb_t *YKAvailTCBList;
-extern tcb_t YKTCBArray[3 +1];
+extern tcb_t YKTCBArray[4 +1];
 extern tcb_t *YKCurrTask;
 extern int YKIdleTaskStack[256];
 
@@ -122,47 +122,73 @@ void YKTickHandler(void);
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask(tcb_t *task);
 void YKBlock2Ready(tcb_t *task);
-# 9 "lab4c_app.c" 2
+# 9 "lab4d_app.c" 2
 
 
 
-int TaskStack[256];
 
-void Task(void);
+
+
+int AStk[256];
+int BStk[256];
+int CStk[256];
+int DStk[256];
+
+void ATask(void);
+void BTask(void);
+void CTask(void);
+void DTask(void);
 
 void main(void)
 {
     YKInitialize();
 
-    printString("Creating task...\n");
-    YKNewTask(Task, (void *) &TaskStack[256], 0);
+    printString("Creating tasks...\n");
+    YKNewTask(ATask, (void *) &AStk[256], 3);
+    YKNewTask(BTask, (void *) &BStk[256], 5);
+    YKNewTask(CTask, (void *) &CStk[256], 7);
+    YKNewTask(DTask, (void *) &DStk[256], 8);
 
     printString("Starting kernel...\n");
     YKRun();
 }
 
-void Task(void)
+void ATask(void)
 {
-    unsigned idleCount;
-    unsigned numCtxSwitches;
-
-    printString("Task started.\n");
+    printString("Task A started.\n");
     while (1)
     {
-        printString("Delaying task...\n");
-
+        printString("Task A, delaying 2.\n");
         YKDelayTask(2);
+    }
+}
 
-        YKEnterMutex();
-        numCtxSwitches = YKCtxSwCount;
-        idleCount = YKIdleCount;
-        YKIdleCount = 0;
-        YKExitMutex();
+void BTask(void)
+{
+    printString("Task B started.\n");
+    while (1)
+    {
+        printString("Task B, delaying 3.\n");
+        YKDelayTask(3);
+    }
+}
 
-        printString("Task running after ");
-        printUInt(numCtxSwitches);
-        printString(" context switches! YKIdleCount is ");
-        printUInt(idleCount);
-        printString(".\n");
+void CTask(void)
+{
+    printString("Task C started.\n");
+    while (1)
+    {
+        printString("Task C, delaying 5.\n");
+        YKDelayTask(5);
+    }
+}
+
+void DTask(void)
+{
+    printString("Task D started.\n");
+    while (1)
+    {
+        printString("Task D, delaying 10.\n");
+        YKDelayTask(10);
     }
 }
