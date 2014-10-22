@@ -81,14 +81,26 @@ void YKRun(void) {
     YKScheduler();
 }
 
+void print_ready_list(void)
+{
+	tcb_t* iter = YKRdyList;
+	while( iter )
+	{
+		printInt( iter->priority );
+		printNewLine();
+		iter = iter->next;
+	}
+}
+
 void YKScheduler(void) {
     if (YKCurrTask != YKRdyList) { // going to change contexts
-		/*printString("DispatchingTask: ");
+		print_ready_list();
+		printString("DispatchingTask: ");
 		printInt(YKRdyList);
 		printNewLine();
 		printString("CurTask: ");
 		printInt(YKCurrTask);
-		printNewLine();*/
+		printNewLine();
         YKDispatcher();
     }
 }
