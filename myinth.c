@@ -17,6 +17,7 @@ void handleTick() {
     printString("TICK ");
     printInt(YKTickNum);
     printNewLine();
+	//print_delay_list();
 
 	current = YKBlockList;
 

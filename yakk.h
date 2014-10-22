@@ -43,6 +43,7 @@ extern tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (ex
 extern tcb_t *YKCurrTask;                 /* Currently running task */
 extern int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
 
+void print_delay_list(void);
 
 void YKInitialize(void);
 void YKNewTask(void (*task)(void), void *task_stack, unsigned char priority);

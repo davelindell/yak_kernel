@@ -92,15 +92,28 @@ void print_ready_list(void)
 	}
 }
 
+void print_delay_list(void)
+{
+	tcb_t* iter = YKBlockList;
+	while( iter )
+	{
+		printInt( iter->priority );
+		printString( " Delay: " );
+		printInt( iter->delay );
+		printNewLine();
+		iter = iter->next;
+	}
+}
+
 void YKScheduler(void) {
     if (YKCurrTask != YKRdyList) { // going to change contexts
-		print_ready_list();
+		/*print_ready_list();
 		printString("DispatchingTask: ");
 		printInt(YKRdyList);
 		printNewLine();
 		printString("CurTask: ");
 		printInt(YKCurrTask);
-		printNewLine();
+		printNewLine();*/
         YKDispatcher();
     }
 }
@@ -144,22 +157,26 @@ void YKDelayTask(unsigned count) {
         YKBlockList = YKCurrTask;
 		YKBlockList->next = 0;
     }
-    else {
+    else if ( YKBlockList->priority > YKCurrTask->priority )
+	{
+		YKCurrTask->next = YKBlockList;
+		YKBlockList->prev = YKCurrTask;
+		YKCurrTask->prev = 0;
+		YKBlockList = YKCurrTask;
+	}
+	else
+	{
         tcb_t *iter = YKBlockList;
-        int moved_to_top = 1;
-        while (YKCurrTask->priority > iter->priority) {
+        while ( iter->next && YKCurrTask->priority > iter->next->priority ) {
             iter = iter->next;
-            moved_to_top = 0;
         }
-        YKCurrTask->next = iter;
-        if (iter->prev) 
-            iter->prev->next = YKCurrTask;  
 
-        YKCurrTask->prev = iter->prev;             
-        iter->prev = YKCurrTask;
+        YKCurrTask->next = iter->next;
+        if (iter->next) 
+            iter->next->prev = YKCurrTask;  
 
-        if (moved_to_top)
-            YKBlockList = YKCurrTask;
+        YKCurrTask->prev = iter;             
+        iter->next = YKCurrTask;
     }
 
     // call scheduler
