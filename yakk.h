@@ -6,7 +6,12 @@
 #define NULL 0
 #endif
 
-typedef enum {READY, DELAYED} tcb_state_t;
+typedef enum {READY, DELAYED, SEMAPHORE} tcb_state_t;
+
+typedef struct YKSEM {
+    int value;
+} YKSEM;
+
 
 typedef struct tcb_t {
     int ax;     //+0
@@ -26,9 +31,11 @@ typedef struct tcb_t {
     int priority;
     tcb_state_t state; //ready, blocked (reason blocked)
     int delay;
+    YKSEM* semaphore;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
+
 
 extern int YKCtxSwCount;
 extern unsigned YKIdleCount;
@@ -43,7 +50,8 @@ extern tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (ex
 extern tcb_t *YKCurrTask;                 /* Currently running task */
 extern int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
 
-void print_delay_list(void);
+int print_delay_list(void);
+int print_ready_list(void);
 
 void YKInitialize(void);
 void YKNewTask(void (*task)(void), void *task_stack, unsigned char priority);
@@ -56,10 +64,13 @@ void YKExitISR(void);
 void YKScheduler(void);
 void YKDispatcher(void);
 void YKTickHandler(void);
+YKSEM* YKSemCreate(int initialValue);
+void YKSemPend(YKSEM *semaphore);
+void YKSemPost(YKSEM *semaphore);
 
 void YKAddReadyTask(tcb_t* task);
-void YKBlockTask(tcb_t *task);
+void YKBlockTask();
 void YKBlock2Ready(tcb_t *task);
-
+void YKBlockSEM2Ready(YKSEM* semaphore);
 
 

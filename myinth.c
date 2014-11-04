@@ -2,7 +2,7 @@
 #include "yakk.h"
 
 extern int KeyBuffer;
-
+extern YKSEM *NSemPtr;
 
 void handleReset() {
     exit(0);   
@@ -16,10 +16,17 @@ void handleTick() {
     printNewLine();
     printString("TICK ");
     printInt(YKTickNum);
-    printNewLine();
-	//print_delay_list();
 
 	current = YKBlockList;
+
+    /*printNewLine();
+    printString("Block List:");
+    printNewLine();
+    print_delay_list();
+    printString("Ready List:");
+    printNewLine();
+    print_ready_list();*/
+
 
 	while ( current )
 	{
@@ -45,6 +52,8 @@ void handleTick() {
 		}
 		current = current->next;
 	}
+
+    //YKSemPost(NSemPtr);
     return;
 }
 
@@ -63,6 +72,9 @@ void handleKeyboard() {
     }
     else if (KeyBuffer == 24180) { //^t
         handleTick();
+    }
+    else if (KeyBuffer == 'p') { //^t
+        YKSemPost(NSemPtr);
     }
     else {
         printNewLine();

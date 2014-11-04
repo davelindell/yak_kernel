@@ -63,7 +63,12 @@ void signalEOI(void);
 
 
 
-typedef enum {READY, DELAYED} tcb_state_t;
+typedef enum {READY, DELAYED, SEMAPHORE} tcb_state_t;
+
+typedef struct YKSEM {
+    int value;
+} YKSEM;
+
 
 typedef struct tcb_t {
     int ax;
@@ -83,9 +88,11 @@ typedef struct tcb_t {
     int priority;
     tcb_state_t state;
     int delay;
+    YKSEM* semaphore;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
+
 
 extern int YKCtxSwCount;
 extern unsigned YKIdleCount;
@@ -96,10 +103,12 @@ extern int YKRunFlag;
 extern tcb_t *YKRdyList;
 extern tcb_t *YKBlockList;
 extern tcb_t *YKAvailTCBList;
-extern tcb_t YKTCBArray[4 +1];
+extern tcb_t YKTCBArray[5 +1];
 extern tcb_t *YKCurrTask;
 extern int YKIdleTaskStack[256];
 
+int print_delay_list(void);
+int print_ready_list(void);
 
 void YKInitialize(void);
 void YKNewTask(void (*task)(void), void *task_stack, unsigned char priority);
@@ -112,14 +121,18 @@ void YKExitISR(void);
 void YKScheduler(void);
 void YKDispatcher(void);
 void YKTickHandler(void);
+YKSEM* YKSemCreate(int initialValue);
+void YKSemPend(YKSEM *semaphore);
+void YKSemPost(YKSEM *semaphore);
 
 void YKAddReadyTask(tcb_t* task);
-void YKBlockTask(tcb_t *task);
+void YKBlockTask();
 void YKBlock2Ready(tcb_t *task);
+void YKBlockSEM2Ready(YKSEM* semaphore);
 # 3 "myinth.c" 2
 
 extern int KeyBuffer;
-
+extern YKSEM *NSemPtr;
 
 void handleReset() {
     exit(0);
@@ -133,10 +146,9 @@ void handleTick() {
     printNewLine();
     printString("TICK ");
     printInt(YKTickNum);
-    printNewLine();
 
  current = YKBlockList;
-
+# 31 "myinth.c"
  while ( current )
  {
   if ( current->state == DELAYED )
@@ -161,6 +173,8 @@ void handleTick() {
   }
   current = current->next;
  }
+
+
     return;
 }
 
@@ -179,6 +193,9 @@ void handleKeyboard() {
     }
     else if (KeyBuffer == 24180) {
         handleTick();
+    }
+    else if (KeyBuffer == 'p') {
+        YKSemPost(NSemPtr);
     }
     else {
         printNewLine();

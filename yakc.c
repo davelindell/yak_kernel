@@ -5,6 +5,8 @@ unsigned YKIdleCount;
 int YKISRDepth;
 int YKRunFlag;
 
+int YKErrorFlag;        // All purpose error flag variable (should always be 0)
+
 
 tcb_t *YKRdyList;        /* a list of TCBs of all ready tasks in order of decreasing priority */
 tcb_t *YKBlockList;      /* tasks delayed or suspended */
@@ -12,6 +14,8 @@ tcb_t *YKAvailTCBList;       /* a list of available TCBs */
 tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (extra one is for the idle task) */
 tcb_t *YKCurrTask;
 int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
+YKSEM YKSEMArray[MAXSEMAPHORES];
+YKSEM* YKAvailSEMList;
 
 void YKIdleTask(void) {
 	int dummy;
@@ -24,6 +28,7 @@ void YKIdleTask(void) {
 }
 
 void YKInitialize(void) {
+    // Init Tasks
     void (*idle_task_p)(void);
     void *idle_task_stack_p; 
     int lowest_priority = 100;
@@ -38,7 +43,12 @@ void YKInitialize(void) {
     idle_task_p = YKIdleTask;
     idle_task_stack_p = YKIdleTaskStack + IDLE_STACK_SIZE - 1;
     lowest_priority = 100;
+    YKErrorFlag = 0;
+    
+    // Init Semaphores
+    YKAvailSEMList = YKSEMArray;
 
+    // Finish
     YKAvailTCBList = YKTCBArray;
     YKNewTask(idle_task_p, idle_task_stack_p, lowest_priority);
 }
@@ -81,29 +91,41 @@ void YKRun(void) {
     YKScheduler();
 }
 
-void print_ready_list(void)
+int print_ready_list(void)
 {
+    int count = 0;
 	tcb_t* iter = YKRdyList;
 	while( iter )
 	{
 		printInt( iter->priority );
 		printNewLine();
 		iter = iter->next;
+        ++count;
 	}
+    return count;
 }
 
-void print_delay_list(void)
-{
+int print_delay_list(void)
+{   
+    int count = 0;
 	tcb_t* iter = YKBlockList;
 	while( iter )
 	{
 		printInt( iter->priority );
-		printString( " Delay: " );
-		printInt( iter->delay );
+        if (iter->state == DELAYED) {
+		    printString( " Delay: " );
+		    printInt( iter->delay );
+        }
+        else if (iter->state == SEMAPHORE) {
+		    printString( " Semaphore: " );
+		    printInt( iter->semaphore->value );
+        }
 		printNewLine();
 		iter = iter->next;
+        ++count;
 	}
-}
+    return count;
+}  
 
 void YKScheduler(void) {
     if (YKCurrTask != YKRdyList) { // going to change contexts
@@ -113,19 +135,34 @@ void YKScheduler(void) {
 		printNewLine();
 		printString("CurTask: ");
 		printInt(YKCurrTask);
-		printNewLine();*/
+		printNewLine();
+        int count;        
+        YKEnterMutex();        
+        printNewLine();
+        printString("Block List:");
+        printNewLine();
+	    count = print_delay_list();
+        printString("Ready List:");
+        printNewLine();
+        count += print_ready_list();
+        if (count != 6)
+            YKErrorFlag = 1;
+        YKExitMutex();*/
+
         YKDispatcher();
     }
 }
 
 
 void YKAddReadyTask(tcb_t *cur_tcb) {    
+    int moved_to_top;
+    tcb_t* iter;
     if(YKRdyList == NULL) {
         YKRdyList = cur_tcb;
     }
     else {
-        tcb_t *iter = YKRdyList;
-        int moved_to_top = 1;
+        iter = YKRdyList;
+        moved_to_top = 1;
         while (cur_tcb->priority > iter->priority) {
             iter = iter->next;
             moved_to_top = 0;
@@ -143,11 +180,7 @@ void YKAddReadyTask(tcb_t *cur_tcb) {
     return;
 }
 
-void YKDelayTask(unsigned count) {
-    // modify tcb to add delay count
-    YKCurrTask->delay = count;
-	YKCurrTask->state = DELAYED;
-
+void YKBlockTask(){
     // readjust ready list
     YKRdyList = YKCurrTask->next;
     YKRdyList->prev = NULL;
@@ -178,6 +211,75 @@ void YKDelayTask(unsigned count) {
         YKCurrTask->prev = iter;             
         iter->next = YKCurrTask;
     }
+}
+
+void YKBlock2Ready(tcb_t *task){
+	tcb_t* current;
+    tcb_t* temp;
+	current = YKBlockList;
+
+	while ( current )
+	{
+		if ( current == task )
+		{
+			temp = current->prev;
+			if ( temp ) temp->next = current->next;
+			else		YKBlockList = current->next;
+
+			temp = current->next;
+			if ( temp ) temp->prev = current->prev;
+			
+			current->prev = 0;
+			current->next = 0;
+			current->state = READY;
+			YKAddReadyTask( current );
+			current = temp;
+			continue;
+		
+		}
+		current = current->next;
+	}
+    return;
+}
+
+void YKBlockSEM2Ready(YKSEM* semaphore){
+	tcb_t* current;
+    tcb_t* temp;
+	current = YKBlockList;
+
+	while ( current )
+	{
+		if ( current->semaphore == semaphore )
+		{
+			temp = current->prev;
+			if ( temp ) temp->next = current->next;
+			else		YKBlockList = current->next;
+
+			temp = current->next;
+			if ( temp ) temp->prev = current->prev;
+			
+			current->prev = 0;
+			current->next = 0;
+			current->state = READY;
+			YKAddReadyTask( current );
+			current = temp;
+			continue;
+		
+		}
+		current = current->next;
+	}
+    return;
+}
+
+void YKDelayTask(unsigned count) {
+    // modify tcb to add delay count
+    YKCurrTask->delay = count;
+	YKCurrTask->state = DELAYED;
+
+    // block the current task
+    YKEnterMutex();
+    YKBlockTask();
+    YKExitMutex();    
 
     // call scheduler
     YKScheduler();
@@ -188,11 +290,60 @@ void YKEnterISR(void) {
 }
 void YKExitISR(void) {
     --YKISRDepth;
+    /*printNewLine();
+    printString("ISR Depth:"); 
+    printInt(YKISRDepth);
+    printNewLine();*/
     if (YKISRDepth == 0) {
         YKScheduler();
     }
 }
 
+YKSEM* YKSemCreate(int initialValue) {
+    YKSEM* return_val;
+    YKAvailSEMList->value = initialValue;
+    return_val = YKAvailSEMList;
+    ++YKAvailSEMList; 
+    return return_val;
+}
+
+void YKSemPend(YKSEM *semaphore) {
+    int available;
+    YKEnterMutex();
+
+    // check if available and decrement semaphore
+    available = semaphore->value > 0 ? 1 : 0;
+    --(semaphore->value);
+
+    // if not available, block and change tcb state to semaphore
+    if (!available) {
+        YKCurrTask->state = SEMAPHORE;
+        YKCurrTask->semaphore = semaphore;        
+        YKBlockTask(YKCurrTask);
+    }
+
+    YKExitMutex();
+
+    // call scheduler
+    // if (!available)
+        YKScheduler();
+}
+
+void YKSemPost(YKSEM *semaphore) {    
+    YKEnterMutex();
+    ++(semaphore->value);
+    if (semaphore->value > 1)
+        semaphore->value = 1;
+
+    if (semaphore->value < 1)  {
+        YKBlockSEM2Ready(semaphore);  
+         
+    }
+    
+    if (YKISRDepth == 0)
+        YKScheduler();
+    YKExitMutex();
+}   
 
 
 
