@@ -12,6 +12,12 @@ typedef struct YKSEM {
     int value;
 } YKSEM;
 
+typedef struct YKQ {
+    void **base_addr;
+    int max_length;
+    int head_i;
+    int tail_i;
+} YKQ;
 
 typedef struct tcb_t {
     int ax;     //+0
@@ -49,6 +55,10 @@ extern tcb_t *YKAvailTCBList;       /* a list of available TCBs */
 extern tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (extra one is for the idle task) */
 extern tcb_t *YKCurrTask;                 /* Currently running task */
 extern int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
+extern YKSEM YKSEMArray[MAXSEMAPHORES]; // Memory for the semaphore array
+extern YKSEM* YKAvailSEMList;           // pointer to list of available tcbs
+extern YKQ YKQArray[MAXQUEUES];        // Memory for message queue array
+extern YKQ* YKQAvailQList;             // pointer to list of available queues
 
 int print_delay_list(void);
 int print_ready_list(void);
@@ -67,6 +77,9 @@ void YKTickHandler(void);
 YKSEM* YKSemCreate(int initialValue);
 void YKSemPend(YKSEM *semaphore);
 void YKSemPost(YKSEM *semaphore);
+YKQ *YKQCreate(void **start, unsigned size);
+void *YKQPend(YKQ *queue);
+int YKQPost(YKQ *queue, void *msg);
 
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask();

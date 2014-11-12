@@ -345,6 +345,16 @@ void YKSemPost(YKSEM *semaphore) {
     YKExitMutex();
 }   
 
+YKQ *YKQCreate(void **start, unsigned size) {
+    
+}
 
+void *YKQPend(YKQ *queue) {
+    
+}
+
+int YKQPost(YKQ *queue, void *msg) {
+    
+}
 
 
