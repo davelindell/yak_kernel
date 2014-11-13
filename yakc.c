@@ -217,58 +217,34 @@ void YKBlockTask(){
     }
 }
 
-void YKBlock2Ready(tcb_t *task){
-	tcb_t* current;
-    tcb_t* temp;
-	current = YKBlockList;
+tcb_t* YKUnblockTask( tcb_t *task )
+{
+	tcb_t *temp;
 
-	while ( current )
-	{
-		if ( current == task )
-		{
-			temp = current->prev;
-			if ( temp ) temp->next = current->next;
-			else		YKBlockList = current->next;
+	temp = task->prev;
+	if ( temp ) temp->next = task->next;
+	else		YKBlockList = task->next;
 
-			temp = current->next;
-			if ( temp ) temp->prev = current->prev;
-			
-			current->prev = 0;
-			current->next = 0;
-			current->state = READY;
-			YKAddReadyTask( current );
-			current = temp;
-			continue;
-		
-		}
-		current = current->next;
-	}
-    return;
+	temp = task->next;
+	if ( temp ) temp->prev = task->prev;
+	
+	task->prev = 0;
+	task->next = 0;
+	task->state = READY;
+	YKAddReadyTask( task );
+	return temp;
 }
 
 void YKBlockSEM2Ready(YKSEM* semaphore){
 	tcb_t* current;
-    tcb_t* temp;
 	current = YKBlockList;
 
 	while ( current )
 	{
 		if ( current->semaphore == semaphore )
 		{
-			temp = current->prev;
-			if ( temp ) temp->next = current->next;
-			else		YKBlockList = current->next;
-
-			temp = current->next;
-			if ( temp ) temp->prev = current->prev;
-			
-			current->prev = 0;
-			current->next = 0;
-			current->state = READY;
-			YKAddReadyTask( current );
-			current = temp;
+			current = YKUnblockTask( current );
 			continue;
-		
 		}
 		current = current->next;
 	}
