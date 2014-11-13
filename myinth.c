@@ -11,7 +11,6 @@ void handleReset() {
 
 void handleTick() {
 	tcb_t* current;
-    tcb_t* temp;
     ++YKTickNum;
     printNewLine();
     printString("TICK ");
@@ -35,18 +34,7 @@ void handleTick() {
 			current->delay--;
 			if ( !current->delay )
 			{
-				temp = current->prev;
-				if ( temp ) temp->next = current->next;
-				else		YKBlockList = current->next;
-
-				temp = current->next;
-				if ( temp ) temp->prev = current->prev;
-				
-				current->prev = 0;
-				current->next = 0;
-				current->state = READY;
-				YKAddReadyTask( current );
-				current = temp;
+				current = YKUnblockTask( current );
 				continue;
 			}
 		}
