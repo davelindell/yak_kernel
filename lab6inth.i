@@ -1,33 +1,21 @@
-# 1 "myinth.c"
+# 1 "lab6inth.c"
 # 1 "<built-in>"
 # 1 "<command-line>"
-# 1 "myinth.c"
-# 1 "clib.h" 1
+# 1 "lab6inth.c"
 
 
 
-void print(char *string, int length);
-void printNewLine(void);
-void printChar(char c);
-void printString(char *string);
 
 
-void printInt(int val);
-void printLong(long val);
-void printUInt(unsigned val);
-void printULong(unsigned long val);
 
-
-void printByte(char val);
-void printWord(int val);
-void printDWord(long val);
-
-
-void exit(unsigned char code);
-
-
-void signalEOI(void);
-# 2 "myinth.c" 2
+# 1 "lab6defs.h" 1
+# 9 "lab6defs.h"
+struct msg
+{
+    int tick;
+    int data;
+};
+# 8 "lab6inth.c" 2
 # 1 "yakk.h" 1
 
 
@@ -142,39 +130,50 @@ int YKQPost(YKQ *queue, void *msg);
 
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask();
-tcb_t *YKUnblockTask();
 void YKBlock2Ready(tcb_t *task);
 void YKBlockSEM2Ready(YKSEM* semaphore);
 void YKBlockQ2Ready(YKQ* queue);
-# 3 "myinth.c" 2
-# 1 "lab6defs.h" 1
-# 9 "lab6defs.h"
-struct msg
-{
-    int tick;
-    int data;
-};
-# 4 "myinth.c" 2
+# 9 "lab6inth.c" 2
+# 1 "clib.h" 1
+
+
+
+void print(char *string, int length);
+void printNewLine(void);
+void printChar(char c);
+void printString(char *string);
+
+
+void printInt(int val);
+void printLong(long val);
+void printUInt(unsigned val);
+void printULong(unsigned long val);
+
+
+void printByte(char val);
+void printWord(int val);
+void printDWord(long val);
+
+
+void exit(unsigned char code);
+
+
+void signalEOI(void);
+# 10 "lab6inth.c" 2
 
 extern YKQ *MsgQPtr;
 extern struct msg MsgArray[];
 extern int GlobalFlag;
 
-extern int KeyBuffer;
-extern YKSEM *NSemPtr;
-
-void handleReset() {
+void myreset(void)
+{
     exit(0);
 }
 
-
-void handleTick() {
- tcb_t* current;
-
-
+void mytick(void)
+{
     static int next = 0;
     static int data = 0;
-    ++YKTickNum;
 
 
     MsgArray[next].tick = YKTickNum;
@@ -184,57 +183,9 @@ void handleTick() {
  printString("  TickISR: queue overflow! \n");
     else if (++next >= 20)
  next = 0;
-
-
-
-    printString("TICK ");
-    printInt(YKTickNum);
-    printNewLine();
- current = YKBlockList;
-# 50 "myinth.c"
- while ( current )
- {
-  if ( current->state == DELAYED )
-  {
-   current->delay--;
-   if ( !current->delay )
-   {
-    current = YKUnblockTask( current );
-    continue;
-   }
-  }
-  current = current->next;
- }
-
-
-    return;
 }
 
-
-void handleKeyboard() {
-    int i = 0;
+void mykeybrd(void)
+{
     GlobalFlag = 1;
-
-    if (KeyBuffer == 24178)
-        exit(0);
-    else if (KeyBuffer == 'd') {
-        printNewLine();
-        printString("DELAY KEY PRESSED");
-        for (i = 0; i < 10000; ++i){}
-        printNewLine();
-        printString("DELAY COMPLETE");
-        printNewLine();
-    }
-    else if (KeyBuffer == 24180) {
-        handleTick();
-    }
-    else {
-        printNewLine();
-        printString("KEYPRESS (");
-        printChar(KeyBuffer);
-        printString(") IGNORED");
-        printNewLine();
-    }
-    return;
-
 }

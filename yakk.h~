@@ -6,12 +6,19 @@
 #define NULL 0
 #endif
 
-typedef enum {READY, DELAYED, SEMAPHORE} tcb_state_t;
+typedef enum {READY, DELAYED, SEMAPHORE, QUEUE} tcb_state_t;
 
 typedef struct YKSEM {
     int value;
 } YKSEM;
 
+typedef struct YKQ {
+    void **base_addr;
+    int max_length;
+    int head;
+    int tail;
+    int size;
+} YKQ;
 
 typedef struct tcb_t {
     int ax;     //+0
@@ -32,6 +39,7 @@ typedef struct tcb_t {
     tcb_state_t state; //ready, blocked (reason blocked)
     int delay;
     YKSEM* semaphore;
+    YKQ* queue;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
@@ -49,8 +57,13 @@ extern tcb_t *YKAvailTCBList;       /* a list of available TCBs */
 extern tcb_t YKTCBArray[MAXTASKS+1];    /* array to allocate all needed TCBs (extra one is for the idle task) */
 extern tcb_t *YKCurrTask;                 /* Currently running task */
 extern int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
+extern YKSEM YKSEMArray[MAXSEMAPHORES]; // Memory for the semaphore array
+extern YKSEM* YKAvailSEMList;           // pointer to list of available tcbs
+extern YKQ YKQArray[MAXQUEUES];        // Memory for message queue array
+extern YKQ* YKQAvailQList;             // pointer to list of available queues
 
 int print_delay_list(void);
+int print_ready_list(void);
 
 void YKInitialize(void);
 void YKNewTask(void (*task)(void), void *task_stack, unsigned char priority);
@@ -66,10 +79,14 @@ void YKTickHandler(void);
 YKSEM* YKSemCreate(int initialValue);
 void YKSemPend(YKSEM *semaphore);
 void YKSemPost(YKSEM *semaphore);
+YKQ *YKQCreate(void **start, unsigned size);
+void *YKQPend(YKQ *queue);
+int YKQPost(YKQ *queue, void *msg);
 
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask();
+void YKUnblockTask();
 void YKBlock2Ready(tcb_t *task);
 void YKBlockSEM2Ready(YKSEM* semaphore);
-
+void YKBlockQ2Ready(YKQ* queue);
 

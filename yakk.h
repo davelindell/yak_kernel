@@ -15,8 +15,8 @@ typedef struct YKSEM {
 typedef struct YKQ {
     void **base_addr;
     int max_length;
-    int head_i;
-    int tail_i;
+    int head;
+    int tail;
     int size;
 } YKQ;
 
@@ -85,7 +85,8 @@ int YKQPost(YKQ *queue, void *msg);
 
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask();
+tcb_t *YKUnblockTask();
 void YKBlock2Ready(tcb_t *task);
 void YKBlockSEM2Ready(YKSEM* semaphore);
-
+void YKBlockQ2Ready(YKQ* queue);
 

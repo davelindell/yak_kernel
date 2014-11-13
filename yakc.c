@@ -243,6 +243,25 @@ void YKBlockSEM2Ready(YKSEM* semaphore){
 	{
 		if ( current->semaphore == semaphore )
 		{
+            current->semaphore = NULL;
+			current = YKUnblockTask( current );
+            continue;
+		}
+		current = current->next;
+	}
+    
+    return;
+}
+
+void YKBlockQ2Ready(YKQ* queue){
+	tcb_t* current;
+	current = YKBlockList;
+
+	while ( current )
+	{
+		if ( current->queue == queue )
+		{
+            current->queue = NULL;
 			current = YKUnblockTask( current );
 			continue;
 		}
@@ -327,14 +346,14 @@ void YKSemPost(YKSEM *semaphore) {
 
 YKQ *YKQCreate(void **start, unsigned size) {
     // Set up return value
-    YKQ return_val;
+    YKQ *return_val;
     return_val = YKQAvailQList;
 
     // create a queue and put it in our queue list
     YKQAvailQList->base_addr = start;
     YKQAvailQList->max_length = size;
-    YKQAvailQList->head_i = 0;
-    YKQAvailQList->tail_i = 0;
+    YKQAvailQList->head = 0;
+    YKQAvailQList->tail = 0;
     YKQAvailQList->size = 0;
     ++YKQAvailQList;
     return return_val;
@@ -342,25 +361,54 @@ YKQ *YKQCreate(void **start, unsigned size) {
 
 void *YKQPend(YKQ *queue) {
     void *return_data;
+    YKEnterMutex();
+
     if (queue->size == 0) {
         YKCurrTask->state = QUEUE;
         YKCurrTask->queue = queue;
         YKBlockTask(YKCurrTask);
+        YKExitMutex();
+        YKScheduler();
     }
-    else {
-        --(queue->size);
-        return_data = (*queue->base_addr) + queue->head;
-        if ( head == (max_length - 1) )
-            head = 0;      
-        else
-            ++head;
-    }    
+    
+    YKEnterMutex();
+    --(queue->size);
+    return_data = queue->base_addr[queue->head];
+    if ( queue->head == (queue->max_length - 1) )
+        queue->head = 0;      
+    else
+        ++(queue->head);
+    YKExitMutex();
+    return return_data;
 }
 
 int YKQPost(YKQ *queue, void *msg) {
+    int return_value;
+    // put message into queue
+    YKEnterMutex();
+    if (queue->size != queue->max_length ) {
+        ++(queue->size);
+        queue->base_addr[queue->tail] = msg;
+
+        if ( queue->tail == (queue->max_length - 1) )
+            queue->tail = 0;      
+        else
+            ++(queue->tail);
         
-
-
+        if (queue->size == 1) {
+            YKBlockQ2Ready(queue); 
+            if (YKISRDepth == 0) {
+                YKExitMutex();
+                YKScheduler();
+            }
+        }
+        return_value = 1;
+    }
+    else
+        return_value = 0;
+    
+    YKExitMutex();
+    return return_value;
 }
 
 
