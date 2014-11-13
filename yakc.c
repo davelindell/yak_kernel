@@ -16,6 +16,8 @@ tcb_t *YKCurrTask;
 int YKIdleTaskStack[IDLE_STACK_SIZE]; /* idle task stack */
 YKSEM YKSEMArray[MAXSEMAPHORES];
 YKSEM* YKAvailSEMList;
+YKQ YKQArray[MAXQUEUES];        // Memory for message queue array
+YKQ* YKQAvailQList;             // pointer to list of available queues
 
 void YKIdleTask(void) {
 	int dummy;
@@ -47,6 +49,8 @@ void YKInitialize(void) {
     
     // Init Semaphores
     YKAvailSEMList = YKSEMArray;
+    // Init Queues
+    YKQAvailQList = YKQArray;
 
     // Finish
     YKAvailTCBList = YKTCBArray;
@@ -346,15 +350,41 @@ void YKSemPost(YKSEM *semaphore) {
 }   
 
 YKQ *YKQCreate(void **start, unsigned size) {
-    
+    // Set up return value
+    YKQ return_val;
+    return_val = YKQAvailQList;
+
+    // create a queue and put it in our queue list
+    YKQAvailQList->base_addr = start;
+    YKQAvailQList->max_length = size;
+    YKQAvailQList->head_i = 0;
+    YKQAvailQList->tail_i = 0;
+    YKQAvailQList->size = 0;
+    ++YKQAvailQList;
+    return return_val;
 }
 
 void *YKQPend(YKQ *queue) {
-    
+    void *return_data;
+    if (queue->size == 0) {
+        YKCurrTask->state = QUEUE;
+        YKCurrTask->queue = queue;
+        YKBlockTask(YKCurrTask);
+    }
+    else {
+        --(queue->size);
+        return_data = (*queue->base_addr) + queue->head;
+        if ( head == (max_length - 1) )
+            head = 0;      
+        else
+            ++head;
+    }    
 }
 
 int YKQPost(YKQ *queue, void *msg) {
-    
+        
+
+
 }
 
 

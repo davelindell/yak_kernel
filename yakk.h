@@ -6,7 +6,7 @@
 #define NULL 0
 #endif
 
-typedef enum {READY, DELAYED, SEMAPHORE} tcb_state_t;
+typedef enum {READY, DELAYED, SEMAPHORE, QUEUE} tcb_state_t;
 
 typedef struct YKSEM {
     int value;
@@ -17,6 +17,7 @@ typedef struct YKQ {
     int max_length;
     int head_i;
     int tail_i;
+    int size;
 } YKQ;
 
 typedef struct tcb_t {
@@ -38,6 +39,7 @@ typedef struct tcb_t {
     tcb_state_t state; //ready, blocked (reason blocked)
     int delay;
     YKSEM* semaphore;
+    YKQ* queue;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
