@@ -50,7 +50,7 @@ typedef struct tcb_t {
     int delay;
     YKSEM* semaphore;
     YKQ* queue;
-    eventstate_t *eventState;
+    eventstate_t eventState;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;

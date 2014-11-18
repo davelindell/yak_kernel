@@ -53,6 +53,8 @@ void YKInitialize(void) {
     YKAvailSEMList = YKSEMArray;
     // Init Queues
     YKQAvailQList = YKQArray;
+	// Init Events
+	YKAvailEventList = YKEventArray;
 
     // Finish
     YKAvailTCBList = YKTCBArray;
@@ -85,9 +87,9 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     cur_tcb->delay = 0;
     cur_tcb->semaphore = NULL;
     cur_tcb->queue = NULL;
-    cur_tcb->eventState->event = NULL;
-    cur_tcb->eventState->eventMask = 0;
-    cur_tcb->eventState->waitMode = 0;
+    cur_tcb->eventState.event = NULL;
+    cur_tcb->eventState.eventMask = 0;
+    cur_tcb->eventState.waitMode = 0;
     cur_tcb->prev = 0;
     cur_tcb->next = 0;
     YKAddReadyTask(cur_tcb);
@@ -286,18 +288,18 @@ void YKBlockEvent2Ready(YKEVENT *event){
 
 	while ( current )
 	{
-		if ( current->state == EVENT && current->eventState->event == event)
+		if ( current->state == EVENT && current->eventState.event == event )
 		{
             // compare event flags with the mask
-            tmp = event->flags & current->eventState->eventMask;
+            tmp = event->flags & current->eventState.eventMask;
             unblock_this_task = 0;
 
-            if (current->eventState->waitMode == EVENT_WAIT_ANY) {
+            if (current->eventState.waitMode == EVENT_WAIT_ANY) {
                 if (tmp > 0)
                     unblock_this_task = 1;
             }    
-            else if (current->eventState->waitMode == EVENT_WAIT_ALL) {
-                if (tmp == current->eventState->eventMask)
+            else if (current->eventState.waitMode == EVENT_WAIT_ALL) {
+                if (tmp == current->eventState.eventMask)
                     unblock_this_task = 1;
             }
             else {
@@ -307,9 +309,9 @@ void YKBlockEvent2Ready(YKEVENT *event){
             }            
             
             if (unblock_this_task) {
-                current->eventState->event = NULL;
-                current->eventState->eventMask = 0;
-                current->eventState->waitMode = 0;
+                current->eventState.event = NULL;
+                current->eventState.eventMask = 0;
+                current->eventState.waitMode = 0;
 			    current = YKUnblockTask( current );
                 continue;
             }
@@ -502,9 +504,9 @@ unsigned YKEventPend(YKEVENT *event, unsigned eventMask, int waitMode) {
     if (block_this_task) {
         YKEnterMutex();
         YKCurrTask->state = EVENT;
-        YKCurrTask->eventState->event = event;
-        YKCurrTask->eventState->eventMask = eventMask;
-        YKCurrTask->eventState->waitMode = waitMode;
+        YKCurrTask->eventState.event = event;
+        YKCurrTask->eventState.eventMask = eventMask;
+        YKCurrTask->eventState.waitMode = waitMode;
         YKBlockTask(YKCurrTask);
         YKExitMutex();
         YKScheduler(); 

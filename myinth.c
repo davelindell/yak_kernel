@@ -13,6 +13,15 @@ void handleTick() {
 	tcb_t* current;
     ++YKTickNum;
     current = YKBlockList;
+
+    /*printNewLine();
+    printString("Block List:");
+    printNewLine();
+    print_delay_list();
+    printString("Ready List:");
+    printNewLine();
+    print_ready_list();*/
+
 	while ( current )
 	{
 		if ( current->state == DELAYED )
