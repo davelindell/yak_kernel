@@ -11,7 +11,7 @@ void handleReset() {
 
 void handleTick() {
 	tcb_t* current;
-
+    ++YKTickNum;
 	while ( current )
 	{
 		if ( current->state == DELAYED )

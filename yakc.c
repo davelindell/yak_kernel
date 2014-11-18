@@ -19,7 +19,7 @@ YKSEM* YKAvailSEMList;
 YKQ YKQArray[MAXQUEUES];        // Memory for message queue array
 YKQ* YKQAvailQList;             // pointer to list of available queues
 YKEVENT YKEventArray[MAXEVENTS];        // Memory for event array
-YKEVENT* YKQAvailEventList;             // pointer to list of available events
+YKEVENT* YKAvailEventList;             // pointer to list of available events
 
 void YKIdleTask(void) {
 	int dummy;
@@ -85,9 +85,9 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     cur_tcb->delay = 0;
     cur_tcb->semaphore = NULL;
     cur_tcb->queue = NULL;
-    cur_tcb->event->event = NULL;
-    cur_tcb->event->eventMask = 0;
-    cur_tcb->event->waitMode = 0;
+    cur_tcb->eventState->event = NULL;
+    cur_tcb->eventState->eventMask = 0;
+    cur_tcb->eventState->waitMode = 0;
     cur_tcb->prev = 0;
     cur_tcb->next = 0;
     YKAddReadyTask(cur_tcb);
@@ -279,9 +279,10 @@ void YKBlockQ2Ready(YKQ* queue){
 
 void YKBlockEvent2Ready(YKEVENT *event){
 	tcb_t* current;
-	current = YKBlockList;
     int tmp;
     int unblock_this_task; // don't unblock by default
+	
+    current = YKBlockList;
 
 	while ( current )
 	{
@@ -291,11 +292,11 @@ void YKBlockEvent2Ready(YKEVENT *event){
             tmp = event->flags & current->eventState->eventMask;
             unblock_this_task = 0;
 
-            if (current->eventState->waitMode == WAIT_FOR_ANY) {
+            if (current->eventState->waitMode == EVENT_WAIT_ANY) {
                 if (tmp > 0)
                     unblock_this_task = 1;
             }    
-            else if (current->eventState->waitMode == WAIT_FOR_ALL) {
+            else if (current->eventState->waitMode == EVENT_WAIT_ALL) {
                 if (tmp == current->eventState->eventMask)
                     unblock_this_task = 1;
             }
@@ -485,11 +486,11 @@ unsigned YKEventPend(YKEVENT *event, unsigned eventMask, int waitMode) {
     // compare event flags with the mask
     tmp = event->flags & eventMask;
     
-    if (waitMode == WAIT_FOR_ANY) {
+    if (waitMode == EVENT_WAIT_ANY) {
         if (tmp > 0)
             block_this_task = 0;
     }    
-    else if (waitMode == WAIT_FOR_ALL) {
+    else if (waitMode == EVENT_WAIT_ALL) {
         if (tmp == eventMask)
             block_this_task = 0;
     }
@@ -517,7 +518,7 @@ void YKEventSet(YKEVENT *event, unsigned eventMask) {
 
     // grab things from the blocked list and move to ready
     YKEnterMutex();    
-    YKBlockEvent2Ready(event)
+    YKBlockEvent2Ready(event);
     YKExitMutex();
     if (YKISRDepth == 0) 
         YKScheduler();

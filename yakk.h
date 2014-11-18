@@ -13,9 +13,9 @@ typedef struct YKEVENT {
 } YKEVENT;
 
 typedef struct eventstate_t {
-    YKEVENT *event
-    unsigned eventMask
-    int waitMode
+    YKEVENT *event;
+    unsigned eventMask;
+    int waitMode;
 } eventstate_t;
 
 typedef struct YKSEM {
@@ -50,7 +50,7 @@ typedef struct tcb_t {
     int delay;
     YKSEM* semaphore;
     YKQ* queue;
-    eventstate_t eventState;
+    eventstate_t *eventState;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
@@ -73,7 +73,7 @@ extern YKSEM* YKAvailSEMList;           // pointer to list of available tcbs
 extern YKQ YKQArray[MAXQUEUES];        // Memory for message queue array
 extern YKQ* YKQAvailQList;             // pointer to list of available queues
 extern YKEVENT YKEventArray[MAXEVENTS];        // Memory for event array
-extern YKEVENT* YKQAvailEventList;             // pointer to list of available events
+extern YKEVENT* YKAvailEventList;             // pointer to list of available events
 
 int print_delay_list(void);
 int print_ready_list(void);
