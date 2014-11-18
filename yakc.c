@@ -277,6 +277,48 @@ void YKBlockQ2Ready(YKQ* queue){
     return;
 }
 
+void YKBlockEvent2Ready(YKEVENT *event){
+	tcb_t* current;
+	current = YKBlockList;
+    int tmp;
+    int unblock_this_task; // don't unblock by default
+
+	while ( current )
+	{
+		if ( current->state == EVENT && current->eventState->event == event)
+		{
+            // compare event flags with the mask
+            tmp = event->flags & current->eventState->eventMask;
+            unblock_this_task = 0;
+
+            if (current->eventState->waitMode == WAIT_FOR_ANY) {
+                if (tmp > 0)
+                    unblock_this_task = 1;
+            }    
+            else if (current->eventState->waitMode == WAIT_FOR_ALL) {
+                if (tmp == current->eventState->eventMask)
+                    unblock_this_task = 1;
+            }
+            else {
+                // this shouldn't happen
+                printString("messed up waitmode in YKBlockEvent2Ready. Corrupted tcb?");        
+                exit(0);
+            }            
+            
+            if (unblock_this_task) {
+                current->eventState->event = NULL;
+                current->eventState->eventMask = 0;
+                current->eventState->waitMode = 0;
+			    current = YKUnblockTask( current );
+                continue;
+            }
+			
+		}
+		current = current->next;
+	}
+    return;
+}
+
 void YKDelayTask(unsigned count) {
     // modify tcb to add delay count
     YKCurrTask->delay = count;
@@ -432,17 +474,58 @@ YKEVENT *YKEventCreate(unsigned initialValue) {
 }
 
 unsigned YKEventPend(YKEVENT *event, unsigned eventMask, int waitMode) {
+    YKEVENT* curr_event;
+    unsigned *curr_eventMask;
+    int *curr_waitMode;
+    int block_this_task;    
+    int tmp;    
+
+    block_this_task = 1; //block the task unless the event flags are already what the task is waiting for
     
-
-
+    // compare event flags with the mask
+    tmp = event->flags & eventMask;
+    
+    if (waitMode == WAIT_FOR_ANY) {
+        if (tmp > 0)
+            block_this_task = 0;
+    }    
+    else if (waitMode == WAIT_FOR_ALL) {
+        if (tmp == eventMask)
+            block_this_task = 0;
+    }
+    else {
+        // this shouldn't happen
+        printString("Someone passed in the wrong waitMode to YKEventPend");        
+        exit(0);
+    }
+    if (block_this_task) {
+        YKEnterMutex();
+        YKCurrTask->state = EVENT;
+        YKCurrTask->eventState->event = event;
+        YKCurrTask->eventState->eventMask = eventMask;
+        YKCurrTask->eventState->waitMode = waitMode;
+        YKBlockTask(YKCurrTask);
+        YKExitMutex();
+        YKScheduler(); 
+    }
+    return event->flags;
 }
 
 void YKEventSet(YKEVENT *event, unsigned eventMask) {
+    // set the flags    
+    event->flags = event->flags | eventMask;
 
+    // grab things from the blocked list and move to ready
+    YKEnterMutex();    
+    YKBlockEvent2Ready(event)
+    YKExitMutex();
+    if (YKISRDepth == 0) 
+        YKScheduler();
 }
 
 void YKEventReset(YKEVENT *event, unsigned eventMask) {
-
+    eventMask = ~eventMask;
+    event->flags = event->flags & eventMask;
 }
 
 
