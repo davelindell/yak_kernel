@@ -6,7 +6,17 @@
 #define NULL 0
 #endif
 
-typedef enum {READY, DELAYED, SEMAPHORE, QUEUE} tcb_state_t;
+typedef enum {READY, DELAYED, SEMAPHORE, QUEUE, EVENT} tcb_state_t;
+
+typedef struct YKEVENT {
+    int flags;
+} YKEVENT;
+
+typedef struct eventstate_t {
+    YKEVENT *event
+    unsigned eventMask
+    int waitMode
+} eventstate_t;
 
 typedef struct YKSEM {
     int value;
@@ -29,7 +39,7 @@ typedef struct tcb_t {
     void *sp;   //+10
     void *bp;   //+12
     int si;     //+14
-    int di;     //+16
+    int di;     //+16 one bit means that the event is set and a zero bit means that it is not set. Each event flags group is represented by a 16-bit value, allowing for 16 events in a single flags group.
     int cs;     //+18
     int ss;     //+20
     int ds;     //+22
@@ -40,6 +50,7 @@ typedef struct tcb_t {
     int delay;
     YKSEM* semaphore;
     YKQ* queue;
+    eventstate_t event;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
@@ -61,6 +72,8 @@ extern YKSEM YKSEMArray[MAXSEMAPHORES]; // Memory for the semaphore array
 extern YKSEM* YKAvailSEMList;           // pointer to list of available tcbs
 extern YKQ YKQArray[MAXQUEUES];        // Memory for message queue array
 extern YKQ* YKQAvailQList;             // pointer to list of available queues
+extern YKEVENT YKEventArray[MAXEVENTS];        // Memory for event array
+extern YKEVENT* YKQAvailEventList;             // pointer to list of available events
 
 int print_delay_list(void);
 int print_ready_list(void);
@@ -82,6 +95,10 @@ void YKSemPost(YKSEM *semaphore);
 YKQ *YKQCreate(void **start, unsigned size);
 void *YKQPend(YKQ *queue);
 int YKQPost(YKQ *queue, void *msg);
+YKEVENT *YKEventCreate(unsigned initialValue);
+unsigned YKEventPend(YKEVENT *event, unsigned eventMask, int waitMode);
+void YKEventSet(YKEVENT *event, unsigned eventMask);
+void YKEventReset(YKEVENT *event, unsigned eventMask);
 
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask();

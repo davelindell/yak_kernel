@@ -18,6 +18,8 @@ YKSEM YKSEMArray[MAXSEMAPHORES];
 YKSEM* YKAvailSEMList;
 YKQ YKQArray[MAXQUEUES];        // Memory for message queue array
 YKQ* YKQAvailQList;             // pointer to list of available queues
+YKEVENT YKEventArray[MAXEVENTS];        // Memory for event array
+YKEVENT* YKQAvailEventList;             // pointer to list of available events
 
 void YKIdleTask(void) {
 	int dummy;
@@ -81,6 +83,11 @@ void YKNewTask(void (* task)(void), void *taskStack, unsigned char priority) {
     cur_tcb->priority = priority;
     cur_tcb->state = READY;
     cur_tcb->delay = 0;
+    cur_tcb->semaphore = NULL;
+    cur_tcb->queue = NULL;
+    cur_tcb->event->event = NULL;
+    cur_tcb->event->eventMask = 0;
+    cur_tcb->event->waitMode = 0;
     cur_tcb->prev = 0;
     cur_tcb->next = 0;
     YKAddReadyTask(cur_tcb);
@@ -318,7 +325,7 @@ void YKSemPend(YKSEM *semaphore) {
     if (!available) {
         YKCurrTask->state = SEMAPHORE;
         YKCurrTask->semaphore = semaphore;        
-        YKBlockTask(YKCurrTask);
+        YKBlockTask();
     }
 
     YKExitMutex();
@@ -339,8 +346,10 @@ void YKSemPost(YKSEM *semaphore) {
          
     }
     
-    if (YKISRDepth == 0)
+    if (YKISRDepth == 0) {
+        YKExitMutex();        
         YKScheduler();
+    }
     YKExitMutex();
 }   
 
@@ -409,6 +418,31 @@ int YKQPost(YKQ *queue, void *msg) {
     
     YKExitMutex();
     return return_value;
+}
+
+YKEVENT *YKEventCreate(unsigned initialValue) {
+    // Set up return value
+    YKEVENT *return_val;
+    return_val = YKAvailEventList;
+
+    // initialize the event
+    YKAvailEventList->flags = initialValue;
+    ++YKAvailEventList;
+    return return_val;
+}
+
+unsigned YKEventPend(YKEVENT *event, unsigned eventMask, int waitMode) {
+    
+
+
+}
+
+void YKEventSet(YKEVENT *event, unsigned eventMask) {
+
+}
+
+void YKEventReset(YKEVENT *event, unsigned eventMask) {
+
 }
 
 
