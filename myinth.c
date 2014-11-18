@@ -32,7 +32,8 @@ void handleTick() {
 
 void handleKeyboard()
 {
-	char c = KeyBuffer;
+	char c;
+	c = KeyBuffer;
 	switch( c )
 	{
 		case 'a': YKEventSet( charEvent, EVENT_A_KEY ); break;
