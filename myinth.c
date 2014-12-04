@@ -1,8 +1,12 @@
 #include "yakk.h"
-#include "lab7defs.h"
 
 extern int KeyBuffer;
-
+extern unsigned NewPieceID;
+extern unsigned NewPieceType;
+extern unsigned NewPieceOrientation;
+extern unsigned NewPieceColumn;
+extern YKSEM *CSemPtr;
+extern YKQ *PMsgQPtr;
 
 void handleReset() {
     exit(0);
@@ -44,21 +48,79 @@ void handleKeyboard()
 {
 	char c;
 	c = KeyBuffer;
-	switch( c )
-	{
-		case 'a': YKEventSet( charEvent, EVENT_A_KEY ); break;
-		case 'b': YKEventSet( charEvent, EVENT_B_KEY ); break;
-		case 'c': YKEventSet( charEvent, EVENT_C_KEY ); break;
-		case 'd': YKEventSet( charEvent, EVENT_A_KEY | EVENT_B_KEY | EVENT_C_KEY ); break;
-		case '1': YKEventSet( numEvent, EVENT_1_KEY ); break;
-		case '2': YKEventSet( numEvent, EVENT_2_KEY ); break;
-		case '3': YKEventSet( numEvent, EVENT_3_KEY ); break;
-		default:
-			printNewLine();
-		    printString("KEYPRESS (");
-		    printChar( c );
-		    printString(") IGNORED");
-		    printNewLine();
-			break;
-	}
+	printNewLine();
+    printString("KEYPRESS (");
+    printChar( c );
+    printString(") IGNORED");
+    printNewLine();
 }
+
+void handleGameOver(void) { 
+
+}
+
+void handleNewPiece(void) {
+    YKQPost(PMsgQPtr, (void*) NewPieceID);
+    YKQPost(PMsgQPtr, (void*) NewPieceType);
+    YKQPost(PMsgQPtr, (void*) NewPieceOrientation);
+    YKQPost(PMsgQPtr, (void*) NewPieceColumn);
+}
+
+void handleReceivedComm(void) {
+    YKSemPost(CSemPtr);
+}
+
+void handleTouchdown(void) {
+
+}
+
+void handleLineClear(void) {
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

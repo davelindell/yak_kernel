@@ -2,32 +2,6 @@
 # 1 "<built-in>"
 # 1 "<command-line>"
 # 1 "myinth.c"
-# 1 "clib.h" 1
-
-
-
-void print(char *string, int length);
-void printNewLine(void);
-void printChar(char c);
-void printString(char *string);
-
-
-void printInt(int val);
-void printLong(long val);
-void printUInt(unsigned val);
-void printULong(unsigned long val);
-
-
-void printByte(char val);
-void printWord(int val);
-void printDWord(long val);
-
-
-void exit(unsigned char code);
-
-
-void signalEOI(void);
-# 2 "myinth.c" 2
 # 1 "yakk.h" 1
 
 
@@ -63,7 +37,17 @@ void signalEOI(void);
 
 
 
-typedef enum {READY, DELAYED, SEMAPHORE, QUEUE} tcb_state_t;
+typedef enum {READY, DELAYED, SEMAPHORE, QUEUE, EVENT} tcb_state_t;
+
+typedef struct YKEVENT {
+    int flags;
+} YKEVENT;
+
+typedef struct eventstate_t {
+    YKEVENT *event;
+    unsigned eventMask;
+    int waitMode;
+} eventstate_t;
 
 typedef struct YKSEM {
     int value;
@@ -97,6 +81,7 @@ typedef struct tcb_t {
     int delay;
     YKSEM* semaphore;
     YKQ* queue;
+    eventstate_t eventState;
     struct tcb_t *prev;
     struct tcb_t *next;
 } tcb_t;
@@ -111,13 +96,15 @@ extern int YKRunFlag;
 extern tcb_t *YKRdyList;
 extern tcb_t *YKBlockList;
 extern tcb_t *YKAvailTCBList;
-extern tcb_t YKTCBArray[5 +1];
+extern tcb_t YKTCBArray[3 +1];
 extern tcb_t *YKCurrTask;
 extern int YKIdleTaskStack[256];
-extern YKSEM YKSEMArray[4];
+extern YKSEM YKSEMArray[1];
 extern YKSEM* YKAvailSEMList;
-extern YKQ YKQArray[1];
+extern YKQ YKQArray[2];
 extern YKQ* YKQAvailQList;
+extern YKEVENT YKEventArray[1];
+extern YKEVENT* YKAvailEventList;
 
 int print_delay_list(void);
 int print_ready_list(void);
@@ -139,6 +126,10 @@ void YKSemPost(YKSEM *semaphore);
 YKQ *YKQCreate(void **start, unsigned size);
 void *YKQPend(YKQ *queue);
 int YKQPost(YKQ *queue, void *msg);
+YKEVENT *YKEventCreate(unsigned initialValue);
+unsigned YKEventPend(YKEVENT *event, unsigned eventMask, int waitMode);
+void YKEventSet(YKEVENT *event, unsigned eventMask);
+void YKEventReset(YKEVENT *event, unsigned eventMask);
 
 void YKAddReadyTask(tcb_t* task);
 void YKBlockTask();
@@ -146,22 +137,15 @@ tcb_t *YKUnblockTask();
 void YKBlock2Ready(tcb_t *task);
 void YKBlockSEM2Ready(YKSEM* semaphore);
 void YKBlockQ2Ready(YKQ* queue);
-# 3 "myinth.c" 2
-# 1 "lab6defs.h" 1
-# 9 "lab6defs.h"
-struct msg
-{
-    int tick;
-    int data;
-};
-# 4 "myinth.c" 2
-
-extern YKQ *MsgQPtr;
-extern struct msg MsgArray[];
-extern int GlobalFlag;
+# 2 "myinth.c" 2
 
 extern int KeyBuffer;
-extern YKSEM *NSemPtr;
+extern unsigned NewPieceID;
+extern unsigned NewPieceType;
+extern unsigned NewPieceOrientation;
+extern unsigned NewPieceColumn;
+extern YKSEM *CSemPtr;
+extern YKQ *PMsgQPtr;
 
 void handleReset() {
     exit(0);
@@ -170,28 +154,9 @@ void handleReset() {
 
 void handleTick() {
  tcb_t* current;
-
-
-    static int next = 0;
-    static int data = 0;
     ++YKTickNum;
-
-
-    MsgArray[next].tick = YKTickNum;
-    data = (data + 89) % 100;
-    MsgArray[next].data = data;
-    if (YKQPost(MsgQPtr, (void *) &(MsgArray[next])) == 0)
- printString("  TickISR: queue overflow! \n");
-    else if (++next >= 20)
- next = 0;
-
-
-
-    printString("TICK ");
-    printInt(YKTickNum);
-    printNewLine();
- current = YKBlockList;
-# 50 "myinth.c"
+    current = YKBlockList;
+# 29 "myinth.c"
  while ( current )
  {
   if ( current->state == DELAYED )
@@ -206,35 +171,40 @@ void handleTick() {
   current = current->next;
  }
 
-
     return;
 }
 
 
-void handleKeyboard() {
-    int i = 0;
-    GlobalFlag = 1;
+void handleKeyboard()
+{
+ char c;
+ c = KeyBuffer;
+ printNewLine();
+    printString("KEYPRESS (");
+    printChar( c );
+    printString(") IGNORED");
+    printNewLine();
+}
 
-    if (KeyBuffer == 24178)
-        exit(0);
-    else if (KeyBuffer == 'd') {
-        printNewLine();
-        printString("DELAY KEY PRESSED");
-        for (i = 0; i < 10000; ++i){}
-        printNewLine();
-        printString("DELAY COMPLETE");
-        printNewLine();
-    }
-    else if (KeyBuffer == 24180) {
-        handleTick();
-    }
-    else {
-        printNewLine();
-        printString("KEYPRESS (");
-        printChar(KeyBuffer);
-        printString(") IGNORED");
-        printNewLine();
-    }
-    return;
+void handleGameOver(void) {
+
+}
+
+void handleNewPiece(void) {
+    YKQPost(PMsgQPtr, (void*) NewPieceID);
+    YKQPost(PMsgQPtr, (void*) NewPieceType);
+    YKQPost(PMsgQPtr, (void*) NewPieceOrientation);
+    YKQPost(PMsgQPtr, (void*) NewPieceColumn);
+}
+
+void handleReceivedComm(void) {
+    YKSemPost(CSemPtr);
+}
+
+void handleTouchdown(void) {
+
+}
+
+void handleLineClear(void) {
 
 }
