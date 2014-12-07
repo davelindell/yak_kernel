@@ -9,7 +9,7 @@ Description: Application code for EE 425 lab 7 (Event flags)
 #include "simptris.h"
 
 #define TASK_STACK_SIZE   4096         /* stack size in words */
-#define MSGQSIZE          200
+#define MSGQSIZE          400
 #define CW_MASK 0x4000 //0B0100000000000000 
 #define CCW_MASK 0
 #define RIGHT_MASK 0x4000 //0B0100000000000000
@@ -21,6 +21,7 @@ Description: Application code for EE 425 lab 7 (Event flags)
 #define RIGHT 1
 #define LEFT 0
 #define ID_MASK 0x3FFF //0B0011111111111111
+#define DONE_MASK 0xFFFF
 
 // Placement state machine globals
 
@@ -226,7 +227,7 @@ void move_corner( void *id, int bin, int orientation, int column )
 
 void choose_spot_and_position(void* id, int type, int orientation, int column )
 {
-	printNewLine();
+	/*printNewLine();
 	printString("Piece ID: ");
 	printInt( (int) id );
 	printNewLine();
@@ -244,7 +245,7 @@ void choose_spot_and_position(void* id, int type, int orientation, int column )
 	printNewLine();
 	printString("Right Bin State: ");
 	printInt( right_bin_state );
-	printNewLine();
+	printNewLine();*/
 	if ( type == 1 )
 	{	// long
 		if ( left_bin_state == 0 && right_bin_state == 0 )
@@ -259,6 +260,7 @@ void choose_spot_and_position(void* id, int type, int orientation, int column )
 		else
 			move_corner( id, left_bin_state == 0, orientation, column );
 	}
+    YKQPost( CMsgQPtr, (void*) DONE_MASK);
 }
 
 void PTask(void) {
@@ -266,7 +268,6 @@ void PTask(void) {
     int type, orientation, column;
     while(1) {
         //get id, type, orientation, column
-
         id = YKQPend(PMsgQPtr); 
         type = (int)YKQPend(PMsgQPtr);
         orientation = (int)YKQPend(PMsgQPtr);
@@ -281,14 +282,20 @@ void CTask(void) {
     int moved_piece;
 	int i;
     while(1) {
+        //printInt(CSemPtr->value);
         YKSemPend(CSemPtr);
         tmp = (int) YKQPend(CMsgQPtr);
+        if (tmp == DONE_MASK) {          
+            continue;
+        }
+        
         id = ID_MASK & tmp;
 		
         printNewLine();
 		printString( "Piece ID: " );
         printInt(id);
         printNewLine();
+            
         if (SLIDE_MASK & tmp) { // slide
             if (RIGHT_MASK & tmp) {
                 SlidePiece(id, RIGHT); // slide right
@@ -311,6 +318,7 @@ void CTask(void) {
         }
 		//for (i = 0; i < 100; ++i){;}
 		printNewLine();  
+        
     }
 }
 
@@ -319,7 +327,7 @@ void STask(void)                /* tracks statistics */
     unsigned max, switchCount, idleCount;
     int tmp;
     long seed;
-    seed = 1247;
+    seed = 5591;
 
     YKDelayTask(1);
     printString("Welcome to the YAK kernel\r\n");
@@ -338,7 +346,7 @@ void STask(void)                /* tracks statistics */
     
     while (1)
     {
-        YKDelayTask(20);
+        YKDelayTask(100000);
         
         YKEnterMutex();
         switchCount = YKCtxSwCount;

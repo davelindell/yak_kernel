@@ -60,16 +60,15 @@ void handleNewPiece(void) {
 }
 
 void handleReceivedComm(void) {
-	CSemPtr->value = -1;
+	//CSemPtr->value = -1;
 	//printInt(CSemPtr->value);
 	//printNewLine();   
-
 	YKSemPost(CSemPtr);
 	return;
 }
 
 void handleTouchdown(void) {
-	return;
+    return;
 }
 
 void handleLineClear(void) {
