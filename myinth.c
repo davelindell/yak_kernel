@@ -7,6 +7,7 @@ extern unsigned NewPieceOrientation;
 extern unsigned NewPieceColumn;
 extern YKSEM *CSemPtr;
 extern YKQ *PMsgQPtr;
+extern int my_sanity;
 
 void handleReset() {
     exit(0);
@@ -17,14 +18,6 @@ void handleTick() {
 	tcb_t* current;
     ++YKTickNum;
     current = YKBlockList;
-
-    /*printNewLine();
-    printString("Block List:");
-    printNewLine();
-    print_delay_list();
-    printString("Ready List:");
-    printNewLine();
-    print_ready_list();*/
 
 	while ( current )
 	{
@@ -55,8 +48,8 @@ void handleKeyboard()
     printNewLine();
 }
 
-void handleGameOver(void) { 
-
+void handleGameOver(void) {
+	exit(0);
 }
 
 void handleNewPiece(void) {
@@ -67,15 +60,20 @@ void handleNewPiece(void) {
 }
 
 void handleReceivedComm(void) {
-    YKSemPost(CSemPtr);
+	CSemPtr->value = -1;
+	//printInt(CSemPtr->value);
+	//printNewLine();   
+
+	YKSemPost(CSemPtr);
+	return;
 }
 
 void handleTouchdown(void) {
-
+	return;
 }
 
 void handleLineClear(void) {
-
+	return;
 }
 
 

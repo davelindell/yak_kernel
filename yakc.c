@@ -387,8 +387,7 @@ void YKSemPost(YKSEM *semaphore) {
         semaphore->value = 1;
 
     if (semaphore->value < 1)  {
-        YKBlockSEM2Ready(semaphore);  
-         
+        YKBlockSEM2Ready(semaphore);
     }
     
     if (YKISRDepth == 0) {
