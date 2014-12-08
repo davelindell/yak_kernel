@@ -6,8 +6,11 @@ extern unsigned NewPieceType;
 extern unsigned NewPieceOrientation;
 extern unsigned NewPieceColumn;
 extern YKSEM *CSemPtr;
+extern YKSEM *NPSemPtr;
 extern YKQ *PMsgQPtr;
-extern int my_sanity;
+extern int busy;
+
+int gotnewpiece;
 
 void handleReset() {
     exit(0);
@@ -46,6 +49,7 @@ void handleKeyboard()
     printChar( c );
     printString(") IGNORED");
     printNewLine();
+    return;
 }
 
 void handleGameOver(void) {
@@ -57,13 +61,18 @@ void handleNewPiece(void) {
     YKQPost(PMsgQPtr, (void*) NewPieceType);
     YKQPost(PMsgQPtr, (void*) NewPieceOrientation);
     YKQPost(PMsgQPtr, (void*) NewPieceColumn);
+    YKSemPost(NPSemPtr);
+    return;
 }
 
 void handleReceivedComm(void) {
 	//CSemPtr->value = -1;
 	//printInt(CSemPtr->value);
-	//printNewLine();   
-	YKSemPost(CSemPtr);
+	//printNewLine();
+    //if ( (busy && (CSemPtr->value > -1)) || !busy )
+    //    YKSemPost(BusySemPtr);
+    //else   
+	    YKSemPost(CSemPtr);
 	return;
 }
 

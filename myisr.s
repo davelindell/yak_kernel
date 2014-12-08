@@ -101,7 +101,7 @@ ISRKeyboard:
     pop bx
     pop ax
     ; return from interrupt
-
+    iret
 ISRGameOver:
     ; Save the context of whatever was running by pushing all registers onto the stack,
     ; except SP, SS, CS, IP, and the flags.
@@ -135,7 +135,7 @@ ISRGameOver:
     pop bx
     pop ax
     ; return from interrupt
-
+    iret
 ISRNewPiece:
     ; Save the context of whatever was running by pushing all registers onto the stack,
     ; except SP, SS, CS, IP, and the flags.
@@ -169,7 +169,7 @@ ISRNewPiece:
     pop bx
     pop ax
     ; return from interrupt
-
+    iret
 ISRReceivedComm:
     ; Save the context of whatever was running by pushing all registers onto the stack,
     ; except SP, SS, CS, IP, and the flags.
@@ -203,7 +203,7 @@ ISRReceivedComm:
     pop bx
     pop ax
     ; return from interrupt
-
+    iret
 ISRTouchdown:
     ; Save the context of whatever was running by pushing all registers onto the stack,
     ; except SP, SS, CS, IP, and the flags.
@@ -237,7 +237,7 @@ ISRTouchdown:
     pop bx
     pop ax
     ; return from interrupt
-
+    iret
 
 ISRLineClear:
     ; Save the context of whatever was running by pushing all registers onto the stack,
@@ -272,27 +272,6 @@ ISRLineClear:
     pop bx
     pop ax
     ; return from interrupt
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     iret
 
 

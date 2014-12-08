@@ -31,7 +31,7 @@ long right_height;
 int left_bin_state;
 int right_bin_state;
 
-
+int busy;
 
 /*
 
@@ -61,6 +61,7 @@ YKQ *CMsgQPtr;                   /* actual name of queue */
 
 // Communication Semaphore
 YKSEM *CSemPtr; 
+YKSEM *NPSemPtr;
 
 // placement functions
 void move_long( void *id, int bin, int orientation, int column )
@@ -260,7 +261,6 @@ void choose_spot_and_position(void* id, int type, int orientation, int column )
 		else
 			move_corner( id, left_bin_state == 0, orientation, column );
 	}
-    YKQPost( CMsgQPtr, (void*) DONE_MASK);
 }
 
 void PTask(void) {
@@ -281,43 +281,34 @@ void CTask(void) {
     int id;
     int moved_piece;
 	int i;
+    int done;
+    done = 1;
     while(1) {
-        //printInt(CSemPtr->value);
-        YKSemPend(CSemPtr);
-        tmp = (int) YKQPend(CMsgQPtr);
-        if (tmp == DONE_MASK) {          
-            continue;
-        }
-        
+     
+        tmp = (int) YKQPend(CMsgQPtr);        
         id = ID_MASK & tmp;
-		
-        printNewLine();
-		printString( "Piece ID: " );
-        printInt(id);
-        printNewLine();
             
         if (SLIDE_MASK & tmp) { // slide
             if (RIGHT_MASK & tmp) {
                 SlidePiece(id, RIGHT); // slide right
-				printString( "Slide Right" );
+				//printString( "Slide Right" );
             }
             else {
                 SlidePiece(id, LEFT); // slide left
-				printString( "Slide Left" );
+				//printString( "Slide Left" );
             }
         }
         else { // rotate
             if (CW_MASK & tmp) {
                 RotatePiece(id, CW); // rotate cw
-				printString( "Rotate Clockwise" );
+				//printString( "Rotate Clockwise" );
             }
             else {
                 RotatePiece(id, CCW); // rotate ccw
-				printString( "Rotate Counter-clockwise" );
+				//printString( "Rotate Counter-clockwise" );
             }
         }
-		//for (i = 0; i < 100; ++i){;}
-		printNewLine();  
+        YKSemPend(CSemPtr); 
         
     }
 }
@@ -327,7 +318,7 @@ void STask(void)                /* tracks statistics */
     unsigned max, switchCount, idleCount;
     int tmp;
     long seed;
-    seed = 5591;
+    seed = 10947;
 
     YKDelayTask(1);
     printString("Welcome to the YAK kernel\r\n");
@@ -346,7 +337,7 @@ void STask(void)                /* tracks statistics */
     
     while (1)
     {
-        YKDelayTask(100000);
+        YKDelayTask(20);
         
         YKEnterMutex();
         switchCount = YKCtxSwCount;
@@ -374,6 +365,7 @@ void main(void)
     YKInitialize();
     YKNewTask(STask, (void *) &STaskStk[TASK_STACK_SIZE], 0);
     CSemPtr = YKSemCreate(0);
+    NPSemPtr = YKSemCreate(0);
     CMsgQPtr = YKQCreate(CMsgQ, MSGQSIZE);
     PMsgQPtr = YKQCreate(PMsgQ, MSGQSIZE);
 
@@ -382,6 +374,7 @@ void main(void)
 
 	left_bin_state = 0;
 	right_bin_state = 0;
-
+    
+    busy = 0;
     YKRun();
 }
